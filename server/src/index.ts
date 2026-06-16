@@ -1,19 +1,12 @@
-import express from "express";
-import type { Request, Response } from 'express';
-import dotenv from "dotenv";
-import cors from "cors";
+import 'dotenv/config';
+import app from './app';
+import { verifyEmailConnection } from './config/nodemailer';
+import { verifyDbConnection } from './config/prisma';
 
-dotenv.config();
+const port = process.env.PORT || 3000;
 
-const app = express();
-app.use(cors()); // clave del front
-app.use(express.json()); 
-
-
-app.get("/", (_req: Request, res: Response) => {
-  res.send("API funcionando 🚀");
-});
-
-app.listen(process.env.PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${process.env.PORT}`);
+app.listen(port, () => {
+  verifyDbConnection();
+  verifyEmailConnection();
+  console.log(`Servidor corriendo en http://localhost:${port}`);
 });
