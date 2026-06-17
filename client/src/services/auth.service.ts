@@ -1,6 +1,8 @@
 import { LoginFields } from "@/app/auth/login/login.schema";
 import { AuthResponse } from "@/app/auth/types";
 
+const base_url = process.env.NEXT_PUBLIC_API_URL;
+
 export const loginService = async (credentials: LoginFields): Promise<AuthResponse> => {
     // Aquí se implementará la llamada real al endpoint de backend más adelante
     return { success: true, message: "Inicio de sesión correcto", code: "200" };
