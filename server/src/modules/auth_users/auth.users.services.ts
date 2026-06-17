@@ -50,14 +50,6 @@ export const registerService = async (email: string, password: string, ruc: stri
 
     const emailVerificationToken = generateEmailVerificationToken({ id: newUser.id, email: newUser.email });
 
-    await prisma.passwordResetToken.create({
-        data: {
-            userId: newUser.id,
-            token: emailVerificationToken,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        }
-    });
-
     await sendEmail({
         to: newUser.email,
         subject: 'Verificacion de correo electronico',
