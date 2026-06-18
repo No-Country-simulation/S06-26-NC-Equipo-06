@@ -1,13 +1,30 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import Login from "./page";
 import { loginService } from "@/services/auth.service";
 
+const pushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+    useRouter: () => ({
+        push: pushMock,
+    }),
+}));
+
 vi.mock("@/services/auth.service", () => ({
-    loginService: vi.fn().mockResolvedValue({ success: true, token: "mock-jwt-token" }),
+    loginService: vi.fn().mockResolvedValue({
+        success: true,
+        code: "200",
+        message: "Login correcto",
+        role: "ADMIN",
+    }),
 }));
 
 describe("Login Page", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     it("renders the login form elements correctly", () => {
         render(<Login />);
 
@@ -70,5 +87,75 @@ describe("Login Page", () => {
             });
         });
     });
+
+    it("redirects to /admin when user has ADMIN role", async () => {
+        vi.mocked(loginService).mockResolvedValueOnce({
+            success: true,
+            code: "200",
+            message: "Login correcto",
+            role: "ADMIN",
+        });
+
+        render(<Login />);
+
+        const emailInput = screen.getByLabelText(/correo electrónico/i);
+        const passwordInput = screen.getByLabelText(/contraseña/i);
+        const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+        fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
+        fireEvent.change(passwordInput, { target: { value: "password123" } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(pushMock).toHaveBeenCalledWith("/admin");
+        });
+    });
+
+    it("redirects to /tenant when user has COMPANY role", async () => {
+        vi.mocked(loginService).mockResolvedValueOnce({
+            success: true,
+            code: "200",
+            message: "Login correcto",
+            role: "COMPANY",
+        });
+
+        render(<Login />);
+
+        const emailInput = screen.getByLabelText(/correo electrónico/i);
+        const passwordInput = screen.getByLabelText(/contraseña/i);
+        const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+        fireEvent.change(emailInput, { target: { value: "company@example.com" } });
+        fireEvent.change(passwordInput, { target: { value: "password123" } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(pushMock).toHaveBeenCalledWith("/tenant");
+        });
+    });
+
+    it("redirects to /municipal when user has MUNICIPAL_ADMIN role", async () => {
+        vi.mocked(loginService).mockResolvedValueOnce({
+            success: true,
+            code: "200",
+            message: "Login correcto",
+            role: "MUNICIPAL_ADMIN",
+        });
+
+        render(<Login />);
+
+        const emailInput = screen.getByLabelText(/correo electrónico/i);
+        const passwordInput = screen.getByLabelText(/contraseña/i);
+        const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+        fireEvent.change(emailInput, { target: { value: "muniadmin@example.com" } });
+        fireEvent.change(passwordInput, { target: { value: "password123" } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(pushMock).toHaveBeenCalledWith("/municipal");
+        });
+    });
 });
+
 
