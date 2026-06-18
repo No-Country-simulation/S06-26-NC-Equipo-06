@@ -9,13 +9,6 @@ import { hashRefreshToken } from '../../utils/hash.refresh.token';
 import { AppError } from '../../utils/app.error';
 import { generateSecureToken, hashToken } from '../../utils/generate.secure.token';
 
-interface LoginData {
-    companyName?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    role?: string;
-}
-
 export const registerService = async (email: string, password: string, ruc: string, companyName: string) => {
 
     const findCompany = await prisma.user.findUnique({
@@ -151,12 +144,6 @@ export const loginService = async (email: string, password: string) => {
     const foundCompany = await prisma.user.findUnique({
         where: {
             email
-        },
-        include: {
-            companyProfile: true,
-            adminProfile: true,
-            localAdminProfile: true,
-            localEvaluator: true
         }
     });
 
@@ -190,31 +177,12 @@ export const loginService = async (email: string, password: string) => {
 
     const token = generateToken({ id: foundCompany.id, email: foundCompany.email, role: foundCompany.role });
 
-    const data: LoginData = {}
-
-    if(foundCompany.role === 'COMPANY' && foundCompany.companyProfile) {
-        data.companyName = foundCompany.companyProfile.companyName;
-        data.role = foundCompany.role;
-    } else if (foundCompany.role === 'ADMIN') {
-        data.firstName = foundCompany.adminProfile?.firstName;
-        data.lastName = foundCompany.adminProfile?.lastName;
-        data.role = foundCompany.role;
-    } else if (foundCompany.role === 'MUNICIPAL_ADMIN') {
-        data.firstName = foundCompany.localAdminProfile?.firstName;
-        data.lastName = foundCompany.localAdminProfile?.lastName;
-        data.role = foundCompany.role;
-    }else if (foundCompany.role === 'MUNICIPAL_EVALUATOR') {
-        data.firstName = foundCompany.localEvaluator?.firstName;
-        data.lastName = foundCompany.localEvaluator?.lastName;
-        data.role = foundCompany.role;
-    }
-
     return {
         token,
         refreshToken: refreshTokenJwt,
         message: "Inicio de sesión exitoso",
         code: "LOGIN_COMPLETED",
-        data: data
+        role: foundCompany.role
     };
 
 }

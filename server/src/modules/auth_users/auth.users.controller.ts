@@ -87,7 +87,7 @@ export const loginController = async (req: Request, res: Response, next: NextFun
             success: true,
             message: responseService.message,
             code: responseService.code,
-            data: responseService.data
+            role: responseService.role
         });
 
     } catch (error) {
