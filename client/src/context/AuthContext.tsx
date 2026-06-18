@@ -44,9 +44,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = async () => {
         try {
             await logoutService();
-            setRole(null);
-            router.push("/");
-            router.refresh();
+
+            window.location.href = "/";
         } catch (error) {
             console.error("Error al cerrar sesión:", error);
         }
