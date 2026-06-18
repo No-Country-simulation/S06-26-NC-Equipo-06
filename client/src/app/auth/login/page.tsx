@@ -11,12 +11,17 @@ const Login = () => {
             password: "",
         },
         validationSchema: loginSchema,
-        onSubmit: async (values) => {
+        onSubmit: async (values, { setStatus }) => {
+            setStatus(null); // Limpiar errores previos de envío
             try {
                 await loginService(values);
                 console.log("Inicio de sesión correcto");
             } catch (error) {
-                console.error("Error al iniciar sesión:", error);
+                if (error instanceof Error) {
+                    setStatus({ error: error.message });
+                } else {
+                    setStatus({ error: "Error inesperado." });
+                }
             }
         },
     });
@@ -25,6 +30,9 @@ const Login = () => {
         <div>
             <h1>Iniciar Sesión</h1>
             <form onSubmit={formik.handleSubmit}>
+                {formik.status && formik.status.error ? (
+                    <div>{formik.status.error}</div>
+                ) : null}
                 <div>
                     <label htmlFor="email">Correo electrónico:</label>
                     <input
