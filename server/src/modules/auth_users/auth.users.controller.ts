@@ -115,13 +115,18 @@ export const logoutController = async (req: Request, res: Response, next: NextFu
     }
 }
 
-export const verifyAuthController = async (_req: Request, res: Response, _next: NextFunction) => {
-    res.status(200).json({
-        success: true,
-        message: 'Usuario autenticado',
-        code: 'USER_AUTHENTICATED',
-        role: (res.locals.user as any).role
-    });
+export const verifyAuthController = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = (res.locals as any).user;
+        res.status(200).json({
+            success: true,
+            message: 'Usuario autenticado',
+            code: 'USER_AUTHENTICATED',
+            role: user.role
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export const adminRegisterController = async (req: Request, res: Response, next: NextFunction) => {
