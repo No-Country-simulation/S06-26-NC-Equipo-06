@@ -23,6 +23,28 @@ Los errores de negocio controlados y los errores internos del servidor se format
 
 ---
 
+## Roles del Sistema
+
+El sistema gestiona los permisos y flujos de registro a través de cuatro roles de usuario:
+
+* **`COMPANY` (Empresa)**:
+  * **Descripción**: Representa a una empresa que se registra para realizar trámites o gestiones en la plataforma.
+  * **Registro**: Público. Cualquier empresa puede registrarse libremente mediante el formulario de registro (`/api/v1/auth-users/register`).
+
+* **`ADMIN` (Administrador General)**:
+  * **Descripción**: Administrador global de la plataforma con permisos totales de gestión de usuarios y configuraciones.
+  * **Registro**: Privado. Solo puede ser registrado por otro administrador general activo (`/api/v1/auth-users/admin-register`).
+
+* **`MUNICIPAL_ADMIN` (Administrador Municipal)**:
+  * **Descripción**: Administrador asignado a una municipalidad específica. Su función principal es gestionar y registrar a los evaluadores de su jurisdicción.
+  * **Registro**: Privado. Es registrado por un administrador general (`ADMIN`) y asociado a una municipalidad específica (`/api/v1/auth-users/register-local-admin`).
+
+* **`MUNICIPAL_EVALUATOR` (Evaluador Municipal)**:
+  * **Descripción**: Encargado de revisar, auditar y calificar las solicitudes y trámites presentados por las empresas en su municipalidad.
+  * **Registro**: Privado. Es registrado únicamente por el administrador municipal (`MUNICIPAL_ADMIN`) de su mismo municipio (`/api/v1/auth-users/register-evaluator`).
+
+---
+
 ## 1. Registro de Empresa
 
 Permite registrar un nuevo usuario con rol `COMPANY` y su perfil de empresa asociado. Envía un correo de verificación.
