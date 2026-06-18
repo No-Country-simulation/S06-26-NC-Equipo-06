@@ -72,14 +72,14 @@ export const loginController = async (req: Request, res: Response, next: NextFun
         res.cookie('refreshToken', responseService.refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: 'strict',
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         res.cookie('token', responseService.token, {
             httpOnly: true,
             secure: true,
-            sameSite: 'strict',
+            sameSite: 'none',
             maxAge: 24 * 60 * 60 * 1000,
         });
 
