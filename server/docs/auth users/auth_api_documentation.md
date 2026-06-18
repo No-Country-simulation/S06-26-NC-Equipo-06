@@ -173,6 +173,9 @@ Autentica las credenciales y establece las cookies HTTP-Only de sesión `token` 
     ```
 * **Respuestas Posibles**:
   * **`200 OK`** (Éxito - establece cookies en el navegador):
+    * **Cookies devueltas (HTTP-Only)**:
+      * `token`: JWT de acceso de sesión (expira en 24 horas).
+      * `refreshToken`: JWT de refresco de sesión (expira en 7 días).
     * *Cuerpo (JSON)*:
       ```json
       {
@@ -331,3 +334,182 @@ Revoca el refresh token en la base de datos y borra las cookies locales de auten
       "code": "SESSION_NOT_FOUND"
     }
     ```
+
+---
+
+## 7. Registro de Administrador General (Admin Register)
+
+Permite a un administrador del sistema registrar un nuevo usuario con rol `ADMIN`. Se le envía un correo electrónico de invitación con un enlace seguro para establecer su contraseña.
+
+* **Endpoint**: `/api/v1/auth-users/admin-register`
+* **Método**: `POST`
+* **Autenticación/Autorización**: Requiere cookies `token` y `refreshToken` activas. Solo accesible para usuarios con el rol `ADMIN`.
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado en el **cuerpo (`Body` JSON)**:
+    ```json
+    {
+      "email": "admin@ejemplo.com",
+      "firstName": "Juan",
+      "lastName": "Pérez"
+    }
+    ```
+* **Respuestas Posibles**:
+  * **`201 Created`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Registro de administrador exitoso",
+      "code": "ADMIN_REGISTER_COMPLETED"
+    }
+    ```
+  * **`409 Conflict`** (Email ya registrado):
+    ```json
+    {
+      "success": false,
+      "message": "Email ya registrado",
+      "code": "EMAIL_ALREADY_EXISTS"
+    }
+    ```
+
+---
+
+## 8. Registro de Administrador Local (Register Local Admin)
+
+Permite a un administrador del sistema registrar un nuevo usuario con rol `MUNICIPAL_ADMIN` asignado a un municipio específico. Se le envía un correo electrónico de invitación con un enlace seguro para establecer su contraseña.
+
+* **Endpoint**: `/api/v1/auth-users/register-local-admin`
+* **Método**: `POST`
+* **Autenticación/Autorización**: Requiere cookies `token` y `refreshToken` activas. Solo accesible para usuarios con el rol `ADMIN`.
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado en el **cuerpo (`Body` JSON)**:
+    ```json
+    {
+      "email": "localadmin@ejemplo.com",
+      "firstName": "María",
+      "lastName": "López",
+      "municipality": "uuid-del-municipio"
+    }
+    ```
+* **Respuestas Posibles**:
+  * **`201 Created`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Registro de administrador local exitoso",
+      "code": "LOCAL_ADMIN_REGISTER_COMPLETED"
+    }
+    ```
+  * **`404 Not Found`** (Municipio no encontrado):
+    ```json
+    {
+      "success": false,
+      "message": "Municipio no encontrado",
+      "code": "MUNICIPALITY_NOT_FOUND"
+    }
+    ```
+  * **`409 Conflict`** (Email ya registrado):
+    ```json
+    {
+      "success": false,
+      "message": "Email ya registrado",
+      "code": "EMAIL_ALREADY_EXISTS"
+    }
+    ```
+
+---
+
+## 9. Registro de Evaluador Local (Register Evaluator)
+
+Permite a un administrador municipal (`MUNICIPAL_ADMIN`) registrar a un evaluador local (`MUNICIPAL_EVALUATOR`) para su mismo municipio. Se le envía un correo electrónico de invitación con un enlace seguro para establecer su contraseña.
+
+* **Endpoint**: `/api/v1/auth-users/register-evaluator`
+* **Método**: `POST`
+* **Autenticación/Autorización**: Requiere cookies `token` y `refreshToken` activas. Solo accesible para usuarios con el rol `MUNICIPAL_ADMIN`.
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado en el **cuerpo (`Body` JSON)**:
+    ```json
+    {
+      "email": "evaluador@ejemplo.com",
+      "firstName": "Carlos",
+      "lastName": "Gómez"
+    }
+    ```
+* **Respuestas Posibles**:
+  * **`201 Created`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Registro de evaluador local exitoso",
+      "code": "LOCAL_EVALUATOR_REGISTER_COMPLETED"
+    }
+    ```
+  * **`404 Not Found`** (Administrador solicitante no encontrado):
+    ```json
+    {
+      "success": false,
+      "message": "Administrador no encontrado",
+      "code": "ADMIN_NOT_FOUND"
+    }
+    ```
+  * **`409 Conflict`** (Email ya registrado):
+    ```json
+    {
+      "success": false,
+      "message": "Email ya registrado",
+      "code": "EMAIL_ALREADY_EXISTS"
+    }
+    ```
+
+---
+
+## 10. Crear Contraseña desde Invitación (Create Password)
+
+Permite a un usuario invitado (creado por invitación de un administrador) establecer su contraseña y activar su cuenta utilizando el token seguro que recibió por correo.
+
+* **Endpoint**: `/api/v1/auth-users/create-password`
+* **Método**: `POST`
+* **Autenticación/Autorización**: Ninguna (público).
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado como **parámetro de consulta (`Query`)**:
+    * `token` (String, el token de invitación seguro provisto en el enlace).
+  * Enviado en el **cuerpo (`Body` JSON)**:
+    ```json
+    {
+      "password": "mi_nueva_contraseña_segura"
+    }
+    ```
+* **Respuestas Posibles**:
+  * **`201 Created`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Contraseña creada exitosamente",
+      "code": "PASSWORD_CREATED_COMPLETED"
+    }
+    ```
+  * **`400 Bad Request`** (Invitación expirada o ya utilizada):
+    * Si la invitación ha expirado:
+      ```json
+      {
+        "success": false,
+        "message": "Invitacion expirada",
+        "code": "INVITATION_EXPIRED"
+      }
+      ```
+    * Si la invitación ya fue usada para crear una contraseña:
+      ```json
+      {
+        "success": false,
+        "message": "Invitacion ya usada",
+        "code": "INVITATION_USED"
+      }
+      ```
+  * **`404 Not Found`** (Invitación no encontrada):
+    ```json
+    {
+      "success": false,
+      "message": "Invitacion no encontrada",
+      "code": "INVITATION_NOT_FOUND"
+    }
+    ```
+
