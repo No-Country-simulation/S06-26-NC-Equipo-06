@@ -1,6 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import * as AuthServices from './auth.users.services';
-import { loginSchema, registerSchema, verifyEmailSchema, resendVerificationEmailSchema } from './auth.users.schema';
+import {
+    loginSchema,
+    registerSchema,
+    verifyEmailSchema,
+    resendVerificationEmailSchema,
+    adminRegisterSchema,
+    registerLocalAdminSchema,
+    registerLocalEvaluatorSchema,
+    tokenSchema,
+    passwordSchema
+} from './auth.users.schema';
 
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -110,4 +120,77 @@ export const verifyAuthController = async (_req: Request, res: Response, _next: 
         message: 'Usuario autenticado',
         code: 'USER_AUTHENTICATED'
     });
+}
+
+export const adminRegisterController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { email, firstName, lastName } = adminRegisterSchema.parse(req.body);
+
+        const responseService = await AuthServices.adminRegisterService(email, firstName, lastName);
+
+        res.status(201).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const registerLocalAdminController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { email, firstName, lastName, municipality } = registerLocalAdminSchema.parse(req.body);
+
+        const responseService = await AuthServices.registerLocalAdminService(email, firstName, lastName, municipality);
+
+        res.status(201).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const registerLocalEvaluatorController = async (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    try {
+        const { email, firstName, lastName } = registerLocalEvaluatorSchema.parse(req.body);
+
+        const responseService = await AuthServices.registerLocalEvaluatorService(email, firstName, lastName, user.userId);
+
+        res.status(201).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const createPasswordController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { token } = tokenSchema.parse(req.query);
+        const { password } = passwordSchema.parse(req.body);
+
+        const responseService = await AuthServices.createPasswordService(token, password);
+
+        res.status(201).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
 }
