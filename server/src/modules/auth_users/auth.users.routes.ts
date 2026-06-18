@@ -13,7 +13,7 @@ router.post('/resend-verification-email/:email', authController.resendVerificati
 
 router.post('/login', authController.loginController);
 
-router.get('/verify-auth', tokenMiddleware, refreshToken, authController.verifyAuthController);
+router.get('/verify-auth', refreshToken, tokenMiddleware, authController.verifyAuthController);
 
 router.post('/logout', refreshToken, tokenMiddleware, authController.logoutController);
 
