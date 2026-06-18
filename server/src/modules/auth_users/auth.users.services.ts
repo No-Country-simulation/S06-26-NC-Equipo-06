@@ -7,6 +7,7 @@ import { sendEmail } from '../../config/nodemailer';
 import { validateEmailVerificationToken, validateRefreshToken } from "../../utils/validate.token";
 import { hashRefreshToken } from '../../utils/hash.refresh.token';
 import { AppError } from '../../utils/app.error';
+import { generateSecureToken, hashToken } from '../../utils/generate.secure.token';
 
 export const registerService = async (email: string, password: string, ruc: string, companyName: string) => {
 
@@ -142,8 +143,7 @@ export const loginService = async (email: string, password: string) => {
 
     const foundCompany = await prisma.user.findUnique({
         where: {
-            email,
-            role: "COMPANY"
+            email
         }
     });
 
@@ -223,4 +223,237 @@ export const logoutService = async (refreshToken: string) => {
         code: "LOGOUT_COMPLETED"
     };
 
+}
+
+export const adminRegisterService = async (email: string, firstName: string, lastName: string) => {
+
+    const findAdmin = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    });
+
+    if (findAdmin) {
+        throw new AppError(409, 'Email ya registrado', 'EMAIL_ALREADY_EXISTS');
+    }
+
+    const createdUser = await prisma.user.create({
+        data: {
+            email,
+            passwordHash: "******",
+            isActive: false,
+            role: 'ADMIN'
+        }
+    });
+
+    await prisma.adminProfile.create({
+        data: {
+            userId: createdUser.id,
+            firstName,
+            lastName
+        }
+    });
+
+    const secureToken = generateSecureToken();
+    const hashSecureToken = hashToken(secureToken);
+
+    await prisma.userInvitation.create({
+        data: {
+            userId: createdUser.id,
+            tokenHash: hashSecureToken,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        }
+    });
+
+    await sendEmail({
+        to: email,
+        subject: 'Invitacion para registrarse',
+        html: `<p>Se ha enviado un nuevo enlace de invitacion para registrarse. Por favor, regístrese haciendo clic en el siguiente enlace:</p><a href="${process.env.FRONTEND_URL}/register?token=${secureToken}">Registrarse</a>`
+    });
+
+    return {
+        message: "Registro de administrador exitoso",
+        code: "ADMIN_REGISTER_COMPLETED"
+    };
+
+}
+
+export const registerLocalAdminService = async (email: string, firstName: string, lastName: string, municipality: string) => {
+
+    const findAdmin = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    });
+
+    if (findAdmin) {
+        throw new AppError(409, 'Email ya registrado', 'EMAIL_ALREADY_EXISTS');
+    }
+
+    const findMunicipality = await prisma.municipality.findFirst({
+        where: {
+            id: municipality
+        }
+    });
+
+    if (!findMunicipality) {
+        throw new AppError(404, 'Municipio no encontrado', 'MUNICIPALITY_NOT_FOUND');
+    }
+
+    const createdUser = await prisma.user.create({
+        data: {
+            email,
+            passwordHash: "******",
+            role: 'MUNICIPAL_ADMIN'
+        }
+    });
+
+    await prisma.localAdminProfile.create({
+        data: {
+            userId: createdUser.id,
+            firstName,
+            lastName,
+            municipalityId: findMunicipality.id
+        }
+    });
+
+    const secureToken = generateSecureToken();
+    const hashSecureToken = hashToken(secureToken);
+
+    await prisma.userInvitation.create({
+        data: {
+            userId: createdUser.id,
+            tokenHash: hashSecureToken,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        }
+    });
+
+    await sendEmail({
+        to: email,
+        subject: 'Invitacion para registrarse',
+        html: `<p>Se ha enviado un nuevo enlace de invitacion para registrarse. Por favor, regístrese haciendo clic en el siguiente enlace:</p><a href="${process.env.FRONTEND_URL}/register?token=${secureToken}">Registrarse</a>`
+    });
+
+    return {
+        message: "Registro de administrador local exitoso",
+        code: "LOCAL_ADMIN_REGISTER_COMPLETED"
+    };
+
+}
+
+export const registerLocalEvaluatorService = async (email: string, firstName: string, lastName: string, adminId: string) => {
+
+    const findEvaluator = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    });
+
+    if (findEvaluator) {
+        throw new AppError(409, 'Email ya registrado', 'EMAIL_ALREADY_EXISTS');
+    }
+
+    const admin = await prisma.user.findUnique({
+        where: {
+            id: adminId,
+            role: 'MUNICIPAL_ADMIN'
+        },
+        include: {
+            localAdminProfile: {
+                include: {
+                    municipality: true
+                }
+            }
+        }
+    });
+
+    if (!admin || !admin.localAdminProfile) {
+        throw new AppError(404, 'Administrador no encontrado', 'ADMIN_NOT_FOUND');
+    }
+
+    const createdUser = await prisma.user.create({
+        data: {
+            email,
+            passwordHash: "******",
+            role: 'MUNICIPAL_EVALUATOR'
+        }
+    });
+
+    await prisma.localEvaluator.create({
+        data: {
+            userId: createdUser.id,
+            firstName,
+            lastName,
+            municipalityId: admin.localAdminProfile.municipalityId
+        }
+    });
+
+    const secureToken = generateSecureToken();
+    const hashSecureToken = hashToken(secureToken);
+
+    await prisma.userInvitation.create({
+        data: {
+            userId: createdUser.id,
+            tokenHash: hashSecureToken,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        }
+    });
+
+    await sendEmail({
+        to: email,
+        subject: 'Invitacion para registrarse',
+        html: `<p>Se ha enviado un nuevo enlace de invitacion para registrarse. Por favor, regístrese haciendo clic en el siguiente enlace:</p><a href="${process.env.FRONTEND_URL}/register?token=${secureToken}">Registrarse</a>`
+    });
+
+    return {
+        message: "Registro de evaluador local exitoso",
+        code: "LOCAL_EVALUATOR_REGISTER_COMPLETED"
+    };
+}
+
+export const createPasswordService = async (token: string, password: string) => {
+
+    const hashTokenValue = hashToken(token);
+
+    const foundInvitation = await prisma.userInvitation.findUnique({
+        where: {
+            tokenHash: hashTokenValue,
+        }
+    });
+
+    if (!foundInvitation) {
+        throw new AppError(404, "Invitacion no encontrada", 'INVITATION_NOT_FOUND');
+    }
+
+    if (foundInvitation.expiresAt < new Date()) {
+        throw new AppError(400, "Invitacion expirada", 'INVITATION_EXPIRED');
+    }
+
+    if (foundInvitation.usedAt !== null) {
+        throw new AppError(400, "Invitacion ya usada", 'INVITATION_USED');
+    }
+
+    await prisma.user.update({
+        where: {
+            id: foundInvitation.userId
+        },
+        data: {
+            passwordHash: await hashPassword(password),
+            isActive: true
+        }
+    });
+
+    await prisma.userInvitation.update({
+        where: {
+            id: foundInvitation.id
+        },
+        data: {
+            usedAt: new Date()
+        }
+    });
+
+    return {
+        message: "Contraseña creada exitosamente",
+        code: "PASSWORD_CREATED_COMPLETED"
+    };
 }
