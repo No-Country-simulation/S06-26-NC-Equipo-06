@@ -182,21 +182,7 @@ Autentica las credenciales y establece las cookies HTTP-Only de sesión `token` 
         "success": true,
         "message": "Inicio de sesión exitoso",
         "code": "LOGIN_COMPLETED",
-        "data": {
-          "firstName": "Prueba",
-          "lastName": "Evaluador",
-          "role": "MUNICIPAL_EVALUATOR"
-        }
-      }
-      o
-      {
-        "success": true,
-        "message": "Inicio de sesión exitoso",
-        "code": "LOGIN_COMPLETED",
-        "data": {
-          "companyName": "Evaluador",
-          "role": "COMPANY"
-        }
+        "role": "MUNICIPAL_EVALUATOR"
       }
       ```
   * **`400 Bad Request`** (Cuenta no activa):
