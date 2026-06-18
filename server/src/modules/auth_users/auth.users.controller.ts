@@ -86,7 +86,8 @@ export const loginController = async (req: Request, res: Response, next: NextFun
         res.status(200).json({
             success: true,
             message: responseService.message,
-            code: responseService.code
+            code: responseService.code,
+            data: responseService.data
         });
 
     } catch (error) {
