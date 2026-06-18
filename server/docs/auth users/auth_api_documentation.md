@@ -195,7 +195,7 @@ Autentica las credenciales y establece las cookies HTTP-Only de sesión `token` 
         "code": "LOGIN_COMPLETED",
         "data": {
           "companyName": "Evaluador",
-          "role": "MUNICIPAL_EVALUATOR"
+          "role": "COMPANY"
         }
       }
       ```
