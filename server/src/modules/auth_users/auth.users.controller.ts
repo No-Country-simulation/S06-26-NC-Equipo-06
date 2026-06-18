@@ -119,7 +119,8 @@ export const verifyAuthController = async (_req: Request, res: Response, _next: 
     res.status(200).json({
         success: true,
         message: 'Usuario autenticado',
-        code: 'USER_AUTHENTICATED'
+        code: 'USER_AUTHENTICATED',
+        role: (res.locals.user as any).role
     });
 }
 
