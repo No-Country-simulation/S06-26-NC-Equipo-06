@@ -2,11 +2,11 @@
 
 import { createContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Role, LoginResponse } from "@/app/auth/types";
+import { Role, AuthResponseWithRole } from "@/app/auth/types";
 import { LoginFields } from "@/app/auth/login/login.schema";
 import { loginService, verifySessionService, logoutService } from "@/services/auth.service";
 
-const redirectPerRole = (role: Role) => {
+export const redirectPerRole = (role: Role) => {
     switch (role) {
         case "ADMIN":
             return "/admin";
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const checkSession = async () => {
             try {
-                const res = (await verifySessionService()) as LoginResponse;
+                const res = await verifySessionService();
                 if (res.success && res.role) {
                     setRole(res.role);
                 } else {

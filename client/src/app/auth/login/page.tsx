@@ -1,11 +1,21 @@
 "use client";
 
+import React, { useEffect } from "react";
 import { useFormik } from "formik";
+import { useRouter } from "next/navigation";
 import { loginSchema, LoginFields } from "./login.schema";
 import useAuth from "@/hooks/useAuth";
+import { redirectPerRole } from "@/context/AuthContext";
 
 const Login = () => {
-    const { login } = useAuth();
+    const { login, role, isLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && role) {
+            router.push(redirectPerRole(role));
+        }
+    }, [role, isLoading, router]);
 
     const formik = useFormik<LoginFields>({
         initialValues: {
@@ -27,6 +37,14 @@ const Login = () => {
             }
         },
     });
+
+    if (isLoading) {
+        return <div>Cargando...</div>;
+    }
+
+    if (role) {
+        return null;
+    }
 
     return (
         <div>
