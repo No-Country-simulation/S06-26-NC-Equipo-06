@@ -115,9 +115,9 @@ export const logoutController = async (req: Request, res: Response, next: NextFu
     }
 }
 
-export const verifyAuthController = async (_req: Request, res: Response, next: NextFunction) => {
+export const verifyAuthController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = (res.locals as any).user;
+        const user = (req as any).user;
         res.status(200).json({
             success: true,
             message: 'Usuario autenticado',
