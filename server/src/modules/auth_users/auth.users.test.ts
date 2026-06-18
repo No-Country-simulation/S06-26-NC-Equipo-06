@@ -374,7 +374,7 @@ describe('Auth Endpoints - Integration Tests', () => {
 
       const setCookieHeaders = res.headers['set-cookie'];
       expect(setCookieHeaders).toBeDefined();
-      
+
       // Ensure the cookies are cleared
       const tokenCleared = setCookieHeaders.some((c: string) => c.includes('token=;'));
       const refreshCleared = setCookieHeaders.some((c: string) => c.includes('refreshToken=;'));
