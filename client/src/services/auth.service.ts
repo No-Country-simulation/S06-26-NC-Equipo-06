@@ -1,10 +1,10 @@
 import { LoginFields } from "@/app/auth/login/login.schema";
-import { AuthResponse } from "@/app/auth/types";
+import { AuthResponse, LoginResponse } from "@/app/auth/types";
 import axios from "axios";
 
 const base_url = process.env.NEXT_PUBLIC_API_URL;
 
-export const loginService = async (credentials: LoginFields): Promise<AuthResponse> => {
+export const loginService = async (credentials: LoginFields): Promise<LoginResponse> => {
     try {
         const response = await axios.post(`${base_url}/api/v1/auth-users/login`, credentials, {
             withCredentials: true,
@@ -14,13 +14,13 @@ export const loginService = async (credentials: LoginFields): Promise<AuthRespon
             throw new Error("El servidor respondió correctamente pero sin datos.");
         }
 
-        return response.data as AuthResponse;
+        return response.data as LoginResponse;
     } catch (error) {
         let errorMessage = "Error desconocido";
 
         if (axios.isAxiosError(error)) {
             if (error.response) {
-                const apiResponse = error.response.data as AuthResponse | undefined;
+                const apiResponse = error.response.data as LoginResponse | undefined;
                 errorMessage = apiResponse?.message || `Error del servidor (${error.response.status})`;
             } else if (error.request) {
                 errorMessage = "No se recibió respuesta del servidor. Verifica tu conexión.";
