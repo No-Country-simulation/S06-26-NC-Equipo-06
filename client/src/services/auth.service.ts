@@ -1,10 +1,10 @@
 import { LoginFields } from "@/app/auth/login/login.schema";
-import { AuthResponse, LoginResponse } from "@/app/auth/types";
+import { AuthResponse, AuthResponseWithRole } from "@/app/auth/types";
 import axios from "axios";
 
 const base_url = process.env.NEXT_PUBLIC_API_URL;
 
-export const loginService = async (credentials: LoginFields): Promise<LoginResponse> => {
+export const loginService = async (credentials: LoginFields): Promise<AuthResponseWithRole> => {
     try {
         const response = await axios.post(`${base_url}/api/v1/auth-users/login`, credentials, {
             withCredentials: true,
@@ -14,13 +14,13 @@ export const loginService = async (credentials: LoginFields): Promise<LoginRespo
             throw new Error("El servidor respondió correctamente pero sin datos.");
         }
 
-        return response.data as LoginResponse;
+        return response.data as AuthResponseWithRole;
     } catch (error) {
         let errorMessage = "Error desconocido";
 
         if (axios.isAxiosError(error)) {
             if (error.response) {
-                const apiResponse = error.response.data as LoginResponse | undefined;
+                const apiResponse = error.response.data as AuthResponseWithRole | undefined;
                 errorMessage = apiResponse?.message || `Error del servidor (${error.response.status})`;
             } else if (error.request) {
                 errorMessage = "No se recibió respuesta del servidor. Verifica tu conexión.";
@@ -39,7 +39,7 @@ export const resendVerificationEmailService = async (email: string): Promise<Aut
     return { success: true, message: "Correo de verificación reenviado", code: "200" };
 };
 
-export const verifySessionService = async (): Promise<AuthResponse> => {
+export const verifySessionService = async (): Promise<AuthResponseWithRole> => {
     try {
         const response = await axios.get(`${base_url}/api/v1/auth-users/verify-auth`, {
             withCredentials: true,
@@ -49,7 +49,7 @@ export const verifySessionService = async (): Promise<AuthResponse> => {
             throw new Error("El servidor respondió correctamente pero sin datos.");
         }
 
-        return response.data as AuthResponse;
+        return response.data as AuthResponseWithRole;
     } catch (error) {
         let errorMessage = "Sesión no válida o expirada";
 

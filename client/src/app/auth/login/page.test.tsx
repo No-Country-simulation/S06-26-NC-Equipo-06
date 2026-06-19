@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import Login from "./page";
 import { loginService } from "@/services/auth.service";
+import { AuthProvider } from "@/context/AuthContext";
 
 const pushMock = vi.fn();
 
@@ -9,6 +10,7 @@ vi.mock("next/navigation", () => ({
     useRouter: () => ({
         push: pushMock,
     }),
+    usePathname: () => "/auth/login",
 }));
 
 vi.mock("@/services/auth.service", () => ({
@@ -25,8 +27,16 @@ describe("Login Page", () => {
         vi.clearAllMocks();
     });
 
+    const renderLogin = () => {
+        return render(
+            <AuthProvider>
+                <Login />
+            </AuthProvider>
+        );
+    };
+
     it("renders the login form elements correctly", () => {
-        render(<Login />);
+        renderLogin();
 
         expect(screen.getByRole("heading", { name: /iniciar sesión/i })).toBeInTheDocument();
         expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
@@ -35,7 +45,7 @@ describe("Login Page", () => {
     });
 
     it("shows validation error messages when submitting empty fields", async () => {
-        render(<Login />);
+        renderLogin();
 
         const submitButton = screen.getByRole("button", { name: /entrar/i });
         fireEvent.click(submitButton);
@@ -47,7 +57,7 @@ describe("Login Page", () => {
     });
 
     it("shows error for invalid email format and too short password", async () => {
-        render(<Login />);
+        renderLogin();
 
         const emailInput = screen.getByLabelText(/correo electrónico/i);
         const passwordInput = screen.getByLabelText(/contraseña/i);
@@ -70,7 +80,7 @@ describe("Login Page", () => {
     });
 
     it("submits the form successfully with valid values", async () => {
-        render(<Login />);
+        renderLogin();
 
         const emailInput = screen.getByLabelText(/correo electrónico/i);
         const passwordInput = screen.getByLabelText(/contraseña/i);
@@ -96,7 +106,7 @@ describe("Login Page", () => {
             role: "ADMIN",
         });
 
-        render(<Login />);
+        renderLogin();
 
         const emailInput = screen.getByLabelText(/correo electrónico/i);
         const passwordInput = screen.getByLabelText(/contraseña/i);
@@ -119,7 +129,7 @@ describe("Login Page", () => {
             role: "COMPANY",
         });
 
-        render(<Login />);
+        renderLogin();
 
         const emailInput = screen.getByLabelText(/correo electrónico/i);
         const passwordInput = screen.getByLabelText(/contraseña/i);
@@ -142,7 +152,7 @@ describe("Login Page", () => {
             role: "MUNICIPAL_ADMIN",
         });
 
-        render(<Login />);
+        renderLogin();
 
         const emailInput = screen.getByLabelText(/correo electrónico/i);
         const passwordInput = screen.getByLabelText(/contraseña/i);
@@ -157,5 +167,3 @@ describe("Login Page", () => {
         });
     });
 });
-
-

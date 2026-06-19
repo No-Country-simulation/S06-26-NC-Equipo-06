@@ -6,6 +6,6 @@ export interface AuthResponse {
 
 export type Role = "COMPANY" | "ADMIN" | "MUNICIPAL_ADMIN" | "MUNICIPAL_EVALUATOR";
 
-export interface LoginResponse extends AuthResponse {
+export interface AuthResponseWithRole extends AuthResponse {
     role: Role;
 }
