@@ -25,4 +25,6 @@ router.post('/register-evaluator', refreshToken, tokenMiddleware, authorize(['MU
 
 router.post('/create-password', authController.createPasswordController);
 
+router.patch('/change-password', refreshToken, tokenMiddleware, authController.changePasswordController);
+
 export default router;
