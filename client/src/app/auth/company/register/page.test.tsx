@@ -168,7 +168,7 @@ describe("CompanyRegisterPage", () => {
         renderRegister();
 
         await waitFor(() => {
-            expect(pushMock).toHaveBeenCalledWith("/tenant");
+            expect(pushMock).toHaveBeenCalledWith("/company");
         });
     });
 });

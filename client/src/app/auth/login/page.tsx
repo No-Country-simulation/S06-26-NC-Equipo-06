@@ -50,9 +50,6 @@ const Login = () => {
         <div>
             <h1>Iniciar Sesión</h1>
             <form onSubmit={formik.handleSubmit}>
-                {formik.status && formik.status.error ? (
-                    <div>{formik.status.error}</div>
-                ) : null}
                 <div>
                     <label htmlFor="email">Correo electrónico:</label>
                     <input
@@ -85,6 +82,9 @@ const Login = () => {
                     Entrar
                 </button>
             </form>
+            {formik.status && formik.status.error ? (
+                <div>{formik.status.error}</div>
+            ) : null}
         </div>
     );
 };
