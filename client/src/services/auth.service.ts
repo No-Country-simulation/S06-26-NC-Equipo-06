@@ -1,4 +1,5 @@
 import { LoginFields } from "@/app/auth/login/login.schema";
+import { RegisterFields } from "@/app/auth/company/register/register.schema";
 import { AuthResponse, AuthResponseWithRole } from "@/app/auth/types";
 import axios from "axios";
 
@@ -83,6 +84,40 @@ export const logoutService = async (): Promise<AuthResponse> => {
         return response.data as AuthResponse;
     } catch (error) {
         let errorMessage = "Error al cerrar sesión";
+
+        if (axios.isAxiosError(error)) {
+            if (error.response) {
+                const apiResponse = error.response.data as AuthResponse | undefined;
+                errorMessage = apiResponse?.message || `Error del servidor (${error.response.status})`;
+            } else if (error.request) {
+                errorMessage = "No se recibió respuesta del servidor. Verifica tu conexión.";
+            } else {
+                errorMessage = error.message;
+            }
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
+    }
+};
+
+export const registerCompanyService = async (fields: RegisterFields): Promise<AuthResponse> => {
+    try {
+        const response = await axios.post(`${base_url}/api/v1/auth-users/register`, fields);
+
+        if (!response.data) {
+            throw new Error("El servidor respondió correctamente pero sin datos.");
+        }
+
+        // Si la respuesta indica éxito falso
+        if (response.data.success === false) {
+            throw new Error(response.data.message || "Error al registrar la empresa");
+        }
+
+        return response.data as AuthResponse;
+    } catch (error) {
+        let errorMessage = "Error al registrar la empresa";
 
         if (axios.isAxiosError(error)) {
             if (error.response) {

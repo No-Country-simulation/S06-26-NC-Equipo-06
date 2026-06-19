@@ -11,7 +11,7 @@ export const redirectPerRole = (role: Role) => {
         case "ADMIN":
             return "/admin";
         case "COMPANY":
-            return "/tenant";
+            return "/company";
         case "MUNICIPAL_ADMIN":
             return "/municipal";
         case "MUNICIPAL_EVALUATOR":
@@ -24,7 +24,7 @@ export const redirectPerRole = (role: Role) => {
 export interface AuthContextType {
     role: Role | null;
     isLoading: boolean;
-    login: (credentials: LoginFields) => Promise<void>;
+    login: (credentials: LoginFields) => Promise<AuthResponseWithRole>;
     logout: () => Promise<void>;
 }
 
@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setRole(response.role);
         localStorage.setItem("has_session", "true");
         router.push(redirectPerRole(response.role));
+        return response;
     };
 
     const logout = async () => {
