@@ -121,7 +121,7 @@ describe("Login Page", () => {
         });
     });
 
-    it("redirects to /tenant when user has COMPANY role", async () => {
+    it("redirects to /company when user has COMPANY role", async () => {
         vi.mocked(loginService).mockResolvedValueOnce({
             success: true,
             code: "200",

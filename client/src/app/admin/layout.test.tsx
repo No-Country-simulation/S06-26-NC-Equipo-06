@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import DashboardLayout from "./layout";
+import AdminLayout from "./layout";
 import useAuth from "@/hooks/useAuth";
 
 const pushMock = vi.fn();
@@ -9,14 +9,13 @@ vi.mock("next/navigation", () => ({
     useRouter: () => ({
         push: pushMock,
     }),
-    usePathname: () => "/admin",
 }));
 
 vi.mock("@/hooks/useAuth", () => ({
     default: vi.fn(),
 }));
 
-describe("DashboardLayout Route Guard", () => {
+describe("AdminLayout Role Guard", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -30,9 +29,9 @@ describe("DashboardLayout Route Guard", () => {
         });
 
         render(
-            <DashboardLayout>
-                <div data-testid="child">Protected Content</div>
-            </DashboardLayout>
+            <AdminLayout>
+                <div data-testid="child">Protected Admin Content</div>
+            </AdminLayout>
         );
 
         expect(screen.getByText(/cargando sesión.../i)).toBeInTheDocument();
@@ -40,7 +39,7 @@ describe("DashboardLayout Route Guard", () => {
         expect(pushMock).not.toHaveBeenCalled();
     });
 
-    it("redirects to login and returns null when not authenticated", () => {
+    it("redirects to /auth/login and returns null when not authenticated", () => {
         vi.mocked(useAuth).mockReturnValue({
             role: null,
             isLoading: false,
@@ -49,17 +48,34 @@ describe("DashboardLayout Route Guard", () => {
         });
 
         const { container } = render(
-            <DashboardLayout>
-                <div data-testid="child">Protected Content</div>
-            </DashboardLayout>
+            <AdminLayout>
+                <div data-testid="child">Protected Admin Content</div>
+            </AdminLayout>
         );
 
         expect(pushMock).toHaveBeenCalledWith("/auth/login");
         expect(container.firstChild).toBeNull();
-        expect(screen.queryByTestId("child")).not.toBeInTheDocument();
     });
 
-    it("renders Header and children when authenticated", () => {
+    it("redirects to / and returns null when authenticated with unauthorized role (e.g. COMPANY)", () => {
+        vi.mocked(useAuth).mockReturnValue({
+            role: "COMPANY",
+            isLoading: false,
+            login: vi.fn(),
+            logout: vi.fn(),
+        });
+
+        const { container } = render(
+            <AdminLayout>
+                <div data-testid="child">Protected Admin Content</div>
+            </AdminLayout>
+        );
+
+        expect(pushMock).toHaveBeenCalledWith("/");
+        expect(container.firstChild).toBeNull();
+    });
+
+    it("renders Header and children when authenticated with ADMIN role", () => {
         vi.mocked(useAuth).mockReturnValue({
             role: "ADMIN",
             isLoading: false,
@@ -68,14 +84,14 @@ describe("DashboardLayout Route Guard", () => {
         });
 
         render(
-            <DashboardLayout>
-                <div data-testid="child">Protected Content</div>
-            </DashboardLayout>
+            <AdminLayout>
+                <div data-testid="child">Protected Admin Content</div>
+            </AdminLayout>
         );
 
         expect(screen.getByRole("button", { name: /cerrar sesión/i })).toBeInTheDocument();
         expect(screen.getByTestId("child")).toBeInTheDocument();
-        expect(screen.getByText("Protected Content")).toBeInTheDocument();
+        expect(screen.getByText("Protected Admin Content")).toBeInTheDocument();
         expect(pushMock).not.toHaveBeenCalled();
     });
 });
