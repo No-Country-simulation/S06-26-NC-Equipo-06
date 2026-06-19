@@ -9,7 +9,8 @@ import {
     registerLocalAdminSchema,
     registerLocalEvaluatorSchema,
     tokenSchema,
-    passwordSchema
+    passwordSchema,
+    changePasswordSchema
 } from './auth.users.schema';
 
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
@@ -190,6 +191,26 @@ export const createPasswordController = async (req: Request, res: Response, next
         const { password } = passwordSchema.parse(req.body);
 
         const responseService = await AuthServices.createPasswordService(token, password);
+
+        res.status(201).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const changePasswordController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { password, oldPassword } = changePasswordSchema.parse(req.body);
+
+        const user = (req as any).user;
+
+        const responseService = await AuthServices.changePasswordService(password, oldPassword, user.userId);
 
         res.status(201).json({
             success: true,
