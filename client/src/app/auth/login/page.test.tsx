@@ -10,6 +10,7 @@ vi.mock("next/navigation", () => ({
     useRouter: () => ({
         push: pushMock,
     }),
+    usePathname: () => "/auth/login",
 }));
 
 vi.mock("@/services/auth.service", () => ({

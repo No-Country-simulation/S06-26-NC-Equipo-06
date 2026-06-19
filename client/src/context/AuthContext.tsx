@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Role, AuthResponseWithRole } from "@/app/auth/types";
 import { LoginFields } from "@/app/auth/login/login.schema";
 import { loginService, verifySessionService, logoutService } from "@/services/auth.service";
@@ -33,7 +33,9 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [role, setRole] = useState<Role | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [hasChecked, setHasChecked] = useState<boolean>(false);
     const router = useRouter();
+    const pathname = usePathname();
 
     const login = async (credentials: LoginFields) => {
         const response = await loginService(credentials);
@@ -53,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const checkSession = async () => {
+            setIsLoading(true);
             try {
                 const res = await verifySessionService();
                 if (res.success && res.role) {
@@ -65,11 +68,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setRole(null);
             } finally {
                 setIsLoading(false);
+                setHasChecked(true);
             }
         };
 
-        checkSession();
-    }, []);
+        if (pathname === "/") {
+            setIsLoading(false);
+        } else if (!hasChecked) {
+            checkSession();
+        }
+    }, [pathname, hasChecked]);
 
     return (
         <AuthContext.Provider value={{ role, isLoading, login, logout }}>
