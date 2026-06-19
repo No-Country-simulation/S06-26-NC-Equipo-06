@@ -27,7 +27,10 @@ export const verifyMunicipalSlugService = async (slug: string): Promise<VerifyMu
         if (axios.isAxiosError(error)) {
             if (error.response) {
                 const apiResponse = error.response.data as VerifyMunicipalResponse | undefined;
-                errorMessage = apiResponse?.message || `Error del servidor (${error.response.status})`;
+                if (apiResponse && typeof apiResponse.success !== "undefined") {
+                    return apiResponse;
+                }
+                errorMessage = `Error del servidor (${error.response.status})`;
             } else if (error.request) {
                 errorMessage = "No se recibió respuesta del servidor. Verifica tu conexión.";
             } else {

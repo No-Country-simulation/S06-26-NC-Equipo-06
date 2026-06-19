@@ -10,6 +10,7 @@ const MunicipalLoginPage = () => {
     const municipalSlug = params?.municipal as string;
     const [isValidating, setIsValidating] = useState<boolean>(true);
     const [isValid, setIsValid] = useState<boolean>(false);
+    const [isConnectionError, setIsConnectionError] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
 
     useEffect(() => {
@@ -24,9 +25,13 @@ const MunicipalLoginPage = () => {
                 if (res.success) {
                     setIsValid(true);
                 } else {
+                    setIsValid(false);
+                    setIsConnectionError(false);
                     setErrorMsg(res.message || "Municipio no registrado.");
                 }
             } catch (error) {
+                setIsValid(false);
+                setIsConnectionError(true);
                 if (error instanceof Error) {
                     setErrorMsg(error.message);
                 } else {
@@ -49,12 +54,25 @@ const MunicipalLoginPage = () => {
     }
 
     if (!isValid) {
+        if (isConnectionError) {
+            return (
+                <div>
+                    <h1>Error de Conexión</h1>
+                    <p>
+                        No se pudo establecer comunicación con el servidor. Detalle: {errorMsg}
+                    </p>
+                    <a href="http://localhost:3000">
+                        Ir al inicio general
+                    </a>
+                </div>
+            );
+        }
+
         return (
             <div>
-                <h1>404</h1>
-                <h2>Municipio No Encontrado</h2>
+                <h1>Esta municipalidad no está registrada</h1>
                 <p>
-                    {errorMsg || `El municipio "${municipalSlug}" no está registrado en nuestra plataforma Lictia.`}
+                    {errorMsg || `La municipalidad de "${municipalSlug}" no está registrada en Lictia. Por favor, verifica el enlace o contacta con el administrador.`}
                 </p>
                 <a href="http://localhost:3000">
                     Ir al inicio general
