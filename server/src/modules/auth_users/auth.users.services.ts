@@ -177,6 +177,12 @@ export const loginService = async (email: string, password: string) => {
 
     const token = generateToken({ id: foundCompany.id, email: foundCompany.email, role: foundCompany.role });
 
+    await sendEmail({
+        to: foundCompany.email,
+        subject: 'Inicio de sesión exitoso',
+        html: `<p>Se ha iniciado sesión exitosamente en su cuenta. Si usted no ha realizado este cambio, por favor, pongase en contacto con soporte.</p>`
+    });
+
     return {
         token,
         refreshToken: refreshTokenJwt,
@@ -456,5 +462,44 @@ export const createPasswordService = async (token: string, password: string) => 
     return {
         message: "Contraseña creada exitosamente",
         code: "PASSWORD_CREATED_COMPLETED"
+    };
+}
+
+export const changePasswordService = async (password: string, oldPassword: string, userId: string) => {
+
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    });
+
+    if (!user) {
+        throw new AppError(404, "Usuario no encontrado", 'USER_NOT_FOUND');
+    }
+
+    const isValidPassword = await validatePassword(oldPassword, user.passwordHash);
+
+    if (!isValidPassword) {
+        throw new AppError(401, "Contraseña incorrecta", 'INVALID_PASSWORD');
+    }
+
+    await prisma.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            passwordHash: await hashPassword(password)
+        }
+    });
+
+    await sendEmail({
+        to: user.email,
+        subject: 'Contraseña cambiada',
+        html: `<p>Se ha cambiado su contraseña exitosamente. Si usted no ha realizado este cambio, por favor, pongase en contacto con soporte.</p>`
+    });
+
+    return {
+        message: "Contraseña cambiada exitosamente",
+        code: "PASSWORD_CHANGED_COMPLETED"
     };
 }
