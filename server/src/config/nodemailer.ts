@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
+import type SMTPPool from "nodemailer/lib/smtp-pool";
 
 const createTransporter = () => {
     const host = process.env.SMTP_HOST;
@@ -10,7 +11,7 @@ const createTransporter = () => {
         throw new Error("SMTP_CONFIG_MISSING: SMTP_HOST, SMTP_USER y SMTP_PASS son requeridos");
     }
 
-    return nodemailer.createTransport({
+    const options: SMTPTransport.Options & SMTPPool.Options & { family?: 4 | 6 } = {
         host,
         port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
         secure: process.env.SMTP_SECURE === "true",
@@ -18,7 +19,10 @@ const createTransporter = () => {
         pool: true,
         maxConnections: 5,
         socketTimeout: 10_000,
-    });
+        family: 4,
+    };
+
+    return nodemailer.createTransport(options);
 };
 
 export type SendEmailParams = {
