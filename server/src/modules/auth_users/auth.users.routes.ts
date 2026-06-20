@@ -27,4 +27,10 @@ router.post('/create-password', authController.createPasswordController);
 
 router.patch('/change-password', refreshToken, tokenMiddleware, authController.changePasswordController);
 
+router.post('/recover-password', authController.recoverPasswordController);
+
+router.post('/new-password', authController.newPasswordController);
+
+router.post('/close-session-unauth', authController.closeSessionUnauthController);
+
 export default router;

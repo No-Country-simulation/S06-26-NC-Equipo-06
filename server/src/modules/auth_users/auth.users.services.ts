@@ -503,3 +503,118 @@ export const changePasswordService = async (password: string, oldPassword: strin
         code: "PASSWORD_CHANGED_COMPLETED"
     };
 }
+
+export const recoverPasswordService = async (email: string) => {
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    });
+
+    if (!user) {
+        throw new AppError(404, "Usuario no encontrado", 'USER_NOT_FOUND');
+    }
+
+    const secureToken = generateSecureToken();
+    const hashSecureToken = hashToken(secureToken);
+
+    await prisma.passwordResetToken.create({
+        data: {
+            userId: user.id,
+            token: hashSecureToken,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        }
+    });
+
+    await sendEmail({
+        to: user.email,
+        subject: 'Recuperar contraseña',
+        html: `<p>Se ha enviado un nuevo enlace de recuperación de contraseña. Por favor, recupere su contraseña haciendo clic en el siguiente enlace:</p><a href="${process.env.FRONTEND_URL}/new-password?token=${secureToken}">Recuperar contraseña</a>`
+    });
+
+    return {
+        message: "Se ha enviado un nuevo enlace de recuperación de contraseña",
+        code: "PASSWORD_RECOVER_COMPLETED"
+    };
+}
+
+export const newPasswordService = async (token: string, password: string) => {
+
+    const hashTokenValue = hashToken(token);
+
+    const foundToken = await prisma.passwordResetToken.findUnique({
+        where: {
+            token: hashTokenValue,
+        }
+    });
+
+    if (!foundToken) {
+        throw new AppError(404, "Token no encontrado", 'TOKEN_NOT_FOUND');
+    }
+
+    if (foundToken.expiresAt < new Date()) {
+        throw new AppError(400, "Token expirado", 'TOKEN_EXPIRED');
+    }
+
+    if (foundToken.expiresAt < new Date()) {
+        throw new AppError(400, "Token ya usado", 'TOKEN_USED');
+    }
+
+    await prisma.user.update({
+        where: {
+            id: foundToken.userId
+        },
+        data: {
+            passwordHash: await hashPassword(password)
+        }
+    });
+
+    await prisma.passwordResetToken.delete({
+        where: {
+            id: foundToken.id
+        }
+    });
+
+    return {
+        message: "Contraseña cambiada exitosamente",
+        code: "PASSWORD_CHANGED_COMPLETED"
+    };
+}
+
+export const closeSessionUnauthService = async (token: string) => {
+
+    const hashTokenValue = hashToken(token);
+
+    const foundSession = await prisma.session.findUnique({
+        where: {
+            refreshToken: hashTokenValue,
+        }
+    });
+
+    if (!foundSession) {
+        throw new AppError(404, "Token no encontrado", 'TOKEN_NOT_FOUND');
+    }
+
+    if (foundSession.expiresAt < new Date()) {
+        throw new AppError(400, "Token expirado", 'TOKEN_EXPIRED');
+    }
+
+    if (foundSession.revoked) {
+        throw new AppError(400, "Sesion ya cerrada", 'SESSION_CLOSED');
+    }
+
+    await prisma.session.update({
+        where: {
+            refreshToken: hashToken(token)
+        },
+        data: {
+            revoked: true
+        }
+    });
+
+    return {
+        message: "Sesion cerrada exitosamente",
+        code: "SESSION_CLOSED_COMPLETED"
+    };
+}

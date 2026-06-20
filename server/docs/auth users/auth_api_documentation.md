@@ -536,3 +536,179 @@ Permite a un usuario invitado (creado por invitación de un administrador) estab
     }
     ```
 
+---
+
+## 11. Cambiar Contraseña (Change Password)
+
+Permite a un usuario autenticado cambiar su contraseña actual por una nueva.
+
+* **Endpoint**: `/api/v1/auth-users/change-password`
+* **Método**: `PATCH`
+* **Autenticación/Autorización**: Requiere cookies `token` y `refreshToken` activas.
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado en el **cuerpo (`Body` JSON)**:
+    ```json
+    {
+      "password": "nueva_contraseña_segura",
+      "oldPassword": "contraseña_actual"
+    }
+    ```
+* **Respuestas Posibles**:
+  * **`201 Created`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Contraseña cambiada exitosamente",
+      "code": "PASSWORD_CHANGED_COMPLETED"
+    }
+    ```
+  * **`401 Unauthorized`** (Contraseña actual incorrecta):
+    ```json
+    {
+      "success": false,
+      "message": "Contraseña incorrecta",
+      "code": "INVALID_PASSWORD"
+    }
+    ```
+  * **`404 Not Found`** (Usuario no encontrado):
+    ```json
+    {
+      "success": false,
+      "message": "Usuario no encontrado",
+      "code": "USER_NOT_FOUND"
+    }
+    ```
+
+---
+
+## 12. Recuperar Contraseña (Recover Password)
+
+Solicita un enlace para restablecer la contraseña. Envía un correo con un token de recuperación.
+
+* **Endpoint**: `/api/v1/auth-users/recover-password`
+* **Método**: `POST`
+* **Autenticación/Autorización**: Ninguna (público).
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado en el **cuerpo (`Body` JSON)**:
+    ```json
+    {
+      "email": "correo@ejemplo.com"
+    }
+    ```
+* **Respuestas Posibles**:
+  * **`201 Created`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Se ha enviado un nuevo enlace de recuperación de contraseña",
+      "code": "PASSWORD_RECOVER_COMPLETED"
+    }
+    ```
+  * **`404 Not Found`** (Usuario no encontrado):
+    ```json
+    {
+      "success": false,
+      "message": "Usuario no encontrado",
+      "code": "USER_NOT_FOUND"
+    }
+    ```
+
+---
+
+## 13. Establecer Nueva Contraseña (New Password)
+
+Permite establecer una nueva contraseña utilizando el token de recuperación recibido por correo.
+
+* **Endpoint**: `/api/v1/auth-users/new-password`
+* **Método**: `POST`
+* **Autenticación/Autorización**: Ninguna (público).
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado como **parámetro de consulta (`Query`)**:
+    * `token` (String, el token de recuperación de contraseña).
+  * Enviado en el **cuerpo (`Body` JSON)**:
+    ```json
+    {
+      "password": "mi_nueva_contraseña_segura"
+    }
+    ```
+* **Respuestas Posibles**:
+  * **`201 Created`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Contraseña cambiada exitosamente",
+      "code": "PASSWORD_CHANGED_COMPLETED"
+    }
+    ```
+  * **`400 Bad Request`** (Token expirado o ya utilizado):
+    * Si el token ha expirado:
+      ```json
+      {
+        "success": false,
+        "message": "Token expirado",
+        "code": "TOKEN_EXPIRED"
+      }
+      ```
+    * Si el token ya fue utilizado:
+      ```json
+      {
+        "success": false,
+        "message": "Token ya usado",
+        "code": "TOKEN_USED"
+      }
+      ```
+  * **`404 Not Found`** (Token no encontrado):
+    ```json
+    {
+      "success": false,
+      "message": "Token no encontrado",
+      "code": "TOKEN_NOT_FOUND"
+    }
+    ```
+
+---
+
+## 14. Cerrar Sesión Sin Autorización (Close Session Unauthorized)
+
+Permite cerrar/revocar una sesión específica de forma pública utilizando el token de refresco (por ejemplo, desde un enlace de seguridad enviado al correo).
+
+* **Endpoint**: `/api/v1/auth-users/close-session-unauth`
+* **Método**: `POST`
+* **Autenticación/Autorización**: Ninguna (público).
+* **¿Qué pide y cómo lo pide?**:
+  * Enviado como **parámetro de consulta (`Query`)**:
+    * `token` (String, el token de refresco de la sesión a cerrar).
+* **Respuestas Posibles**:
+  * **`200 OK`** (Éxito):
+    ```json
+    {
+      "success": true,
+      "message": "Sesion cerrada exitosamente",
+      "code": "SESSION_CLOSED_COMPLETED"
+    }
+    ```
+  * **`400 Bad Request`** (Token expirado o sesión ya cerrada):
+    * Si el token ha expirado:
+      ```json
+      {
+        "success": false,
+        "message": "Token expirado",
+        "code": "TOKEN_EXPIRED"
+      }
+      ```
+    * Si la sesión ya fue cerrada:
+      ```json
+      {
+        "success": false,
+        "message": "Sesion ya cerrada",
+        "code": "SESSION_CLOSED"
+      }
+      ```
+  * **`404 Not Found`** (Token no encontrado):
+    ```json
+    {
+      "success": false,
+      "message": "Token no encontrado",
+      "code": "TOKEN_NOT_FOUND"
+    }
+    ```

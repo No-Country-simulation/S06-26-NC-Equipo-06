@@ -10,7 +10,9 @@ import {
     registerLocalEvaluatorSchema,
     tokenSchema,
     passwordSchema,
-    changePasswordSchema
+    changePasswordSchema,
+    recoverPasswordSchema,
+    newPasswordSchema
 } from './auth.users.schema';
 
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
@@ -218,6 +220,60 @@ export const changePasswordController = async (req: Request, res: Response, next
             code: responseService.code
         });
 
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const recoverPasswordController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { email } = recoverPasswordSchema.parse(req.body);
+
+        const responseService = await AuthServices.recoverPasswordService(email);
+
+        res.status(201).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const newPasswordController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { token } = tokenSchema.parse(req.query);
+        const { password } = newPasswordSchema.parse(req.body);
+
+        const responseService = await AuthServices.newPasswordService(token, password);
+
+        res.status(201).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const closeSessionUnauthController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { token } = tokenSchema.parse(req.query);
+
+        const responseService = await AuthServices.closeSessionUnauthService(token);
+
+        res.status(200).json({
+            success: true,
+            message: responseService.message,
+            code: responseService.code
+        });
     } catch (error) {
         next(error);
     }
