@@ -65,6 +65,7 @@ export const sendEmail = async ({
     return info as unknown as SMTPTransport.SentMessageInfo;
 };
 
+//
 export const verifyEmailConnection = async (): Promise<void> => {
     await getTransporter().verify();
     console.log("SMTP conectado correctamente");
