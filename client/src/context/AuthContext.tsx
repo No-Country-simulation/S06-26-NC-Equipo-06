@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setRole(null);
                     localStorage.removeItem("has_session");
                 }
-            } catch (error) {
+            } catch {
                 // Si la sesión no es válida o expira, reseteamos el rol y la bandera
                 setRole(null);
                 localStorage.removeItem("has_session");

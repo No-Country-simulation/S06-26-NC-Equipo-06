@@ -4,7 +4,7 @@ import VerifyEmailPage from "./page";
 import { verifyEmailService } from "@/services/auth.service";
 
 const pushMock = vi.fn();
-let getParamMock = vi.fn().mockReturnValue("valid-token");
+const getParamMock = vi.fn().mockReturnValue("valid-token");
 
 vi.mock("next/navigation", () => ({
     useRouter: () => ({
