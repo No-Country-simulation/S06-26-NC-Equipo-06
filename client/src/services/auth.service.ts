@@ -36,7 +36,8 @@ export const loginService = async (credentials: LoginFields): Promise<AuthRespon
     }
 };
 
-export const resendVerificationEmailService = async (email: string): Promise<AuthResponse> => {
+export const resendVerificationEmailService = async (_email: string): Promise<AuthResponse> => {
+    console.log("Reenviando a:", _email);
     return { success: true, message: "Correo de verificación reenviado", code: "200" };
 };
 
