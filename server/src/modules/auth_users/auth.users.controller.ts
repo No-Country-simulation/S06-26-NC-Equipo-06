@@ -246,7 +246,7 @@ export const recoverPasswordController = async (req: Request, res: Response, nex
 export const newPasswordController = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-        const { token } = tokenSchema.parse(req.query);
+        const { token } = tokenSchema.parse(req.params);
         const { password } = newPasswordSchema.parse(req.body);
 
         const responseService = await AuthServices.newPasswordService(token, password);
@@ -265,7 +265,7 @@ export const newPasswordController = async (req: Request, res: Response, next: N
 export const closeSessionUnauthController = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-        const { token } = tokenSchema.parse(req.query);
+        const { token } = tokenSchema.parse(req.params);
 
         const responseService = await AuthServices.closeSessionUnauthService(token);
 

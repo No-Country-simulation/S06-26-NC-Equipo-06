@@ -29,8 +29,8 @@ router.patch('/change-password', refreshToken, tokenMiddleware, authController.c
 
 router.post('/recover-password', authController.recoverPasswordController);
 
-router.post('/new-password', authController.newPasswordController);
+router.post('/new-password/:token', authController.newPasswordController);
 
-router.post('/close-session-unauth', authController.closeSessionUnauthController);
+router.post('/close-session-unauth/:token', authController.closeSessionUnauthController);
 
 export default router;
