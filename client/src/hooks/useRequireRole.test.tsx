@@ -26,6 +26,7 @@ describe("useRequireRole Hook", () => {
             isLoading: true,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
 
         const { result } = renderHook(() => useRequireRole(["ADMIN"]));
@@ -41,6 +42,7 @@ describe("useRequireRole Hook", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
 
         const { result } = renderHook(() => useRequireRole(["ADMIN"]));
@@ -56,6 +58,7 @@ describe("useRequireRole Hook", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
 
         const { result } = renderHook(() => useRequireRole(["ADMIN"], "/custom-login"));
@@ -71,6 +74,7 @@ describe("useRequireRole Hook", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         const { result } = renderHook(() => useRequireRole(["ADMIN"]));
@@ -86,6 +90,7 @@ describe("useRequireRole Hook", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         const { result } = renderHook(() => useRequireRole(["ADMIN"]));
@@ -101,6 +106,7 @@ describe("useRequireRole Hook", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         const { result } = renderHook(() => useRequireRole(["MUNICIPAL_ADMIN", "MUNICIPAL_EVALUATOR"]));

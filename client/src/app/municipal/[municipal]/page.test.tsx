@@ -26,6 +26,7 @@ describe("MunicipalRootPage Redirection", () => {
             isLoading: true,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
 
         render(<MunicipalRootPage />);
@@ -40,6 +41,7 @@ describe("MunicipalRootPage Redirection", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
 
         render(<MunicipalRootPage />);
@@ -53,6 +55,7 @@ describe("MunicipalRootPage Redirection", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         render(<MunicipalRootPage />);
@@ -66,6 +69,7 @@ describe("MunicipalRootPage Redirection", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         render(<MunicipalRootPage />);
@@ -79,6 +83,7 @@ describe("MunicipalRootPage Redirection", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         render(<MunicipalRootPage />);

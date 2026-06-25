@@ -34,6 +34,7 @@ describe("CompanyRegisterPage", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
     });
 
@@ -163,6 +164,7 @@ describe("CompanyRegisterPage", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         renderRegister();
