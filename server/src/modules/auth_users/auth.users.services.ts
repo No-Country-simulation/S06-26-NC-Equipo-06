@@ -8,8 +8,21 @@ import { validateEmailVerificationToken, validateRefreshToken } from "../../util
 import { hashRefreshToken } from '../../utils/hash.refresh.token';
 import { AppError } from '../../utils/app.error';
 import { generateSecureToken, hashToken } from '../../utils/generate.secure.token';
+import { Actors, Role, Status, TargetType } from '@prisma/client';
+import { createAuditLog } from '../audit/audit.service';
+import { AUDIT_ACTIONS, AUDIT_ERROR_CODES } from '../audit/audit.constants';
 
-export const registerService = async (email: string, password: string, ruc: string, companyName: string) => {
+type AuditRequestMeta = {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+};
+
+type AuditActorContext = {
+    actorId?: string | null;
+    actorRole?: Role | null;
+};
+
+export const registerService = async (email: string, password: string, ruc: string, companyName: string, auditMeta: AuditRequestMeta = {}) => {
 
     const findCompany = await prisma.user.findUnique({
         where: {
@@ -18,6 +31,22 @@ export const registerService = async (email: string, password: string, ruc: stri
     });
 
     if (findCompany) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.COMPANY_REGISTER_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.USER,
+            targetId: findCompany.id,
+            errorCode: AUDIT_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+            },
+        });
+
         throw new AppError(409, 'Email ya registrado', 'EMAIL_ALREADY_EXISTS');
     }
 
@@ -28,6 +57,24 @@ export const registerService = async (email: string, password: string, ruc: stri
     });
 
     if (findRuc) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.COMPANY_REGISTER_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.COMPANY_PROFILE,
+            targetId: findRuc.id,
+            errorCode: AUDIT_ERROR_CODES.RUC_ALREADY_EXISTS,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+                ruc,
+                companyName,
+            },
+        });
+
         throw new AppError(409, 'El RUC ya está registrado', 'RUC_ALREADY_EXISTS');
     }
 
@@ -49,6 +96,23 @@ export const registerService = async (email: string, password: string, ruc: stri
         }
     });
 
+    await createAuditLog({
+        action: AUDIT_ACTIONS.COMPANY_REGISTERED,
+        status: Status.SUCCESS,
+        actorType: Actors.ANONYMOUS,
+        actorId: null,
+        actorRole: null,
+        targetType: TargetType.USER,
+        targetId: newUser.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            email: newUser.email,
+            ruc,
+            companyName,
+        },
+    });
+
     const emailVerificationToken = generateEmailVerificationToken({ id: newUser.id, email: newUser.email });
 
     await sendEmail({
@@ -64,11 +128,24 @@ export const registerService = async (email: string, password: string, ruc: stri
 
 }
 
-export const verifyEmailService = async (token: string) => {
+export const verifyEmailService = async (token: string, auditMeta: AuditRequestMeta = {}) => {
 
     const decode = validateEmailVerificationToken(token);
 
     if (!decode) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.EMAIL_VERIFICATION_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: null,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.INVALID_TOKEN,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(400, "Token de verificacion no valido", 'INVALID_TOKEN');
     }
 
@@ -79,10 +156,39 @@ export const verifyEmailService = async (token: string) => {
     });
 
     if (!findUser) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.EMAIL_VERIFICATION_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: null,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.USER_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(404, "El usuario no existe", 'USER_NOT_FOUND');
     }
 
     if (findUser.isActive) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.EMAIL_VERIFICATION_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.USER,
+            actorId: findUser.id,
+            actorRole: findUser.role,
+            targetType: TargetType.USER,
+            targetId: findUser.id,
+            errorCode: 'EMAIL_ALREADY_VERIFIED',
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email: findUser.email,
+            },
+        });
+
         throw new AppError(409, "El usuario ya ha sido verificado", 'EMAIL_ALREADY_VERIFIED');
     }
 
@@ -93,6 +199,21 @@ export const verifyEmailService = async (token: string) => {
         data: {
             isActive: true
         }
+    });
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.EMAIL_VERIFIED,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: findUser.id,
+        actorRole: findUser.role,
+        targetType: TargetType.USER,
+        targetId: findUser.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            email: findUser.email,
+        },
     });
 
     await sendEmail({
@@ -108,7 +229,7 @@ export const verifyEmailService = async (token: string) => {
 
 }
 
-export const resendVerificationEmailService = async (email: string) => {
+export const resendVerificationEmailService = async (email: string, auditMeta: AuditRequestMeta = {}) => {
 
     const findUser = await prisma.user.findUnique({
         where: {
@@ -117,10 +238,42 @@ export const resendVerificationEmailService = async (email: string) => {
     });
 
     if (!findUser) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.VERIFICATION_EMAIL_RESEND_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: null,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.USER_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+            },
+        });
+
         throw new AppError(404, "El usuario no existe", 'USER_NOT_FOUND');
     }
 
     if (findUser.isActive) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.VERIFICATION_EMAIL_RESEND_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.USER,
+            actorId: findUser.id,
+            actorRole: findUser.role,
+            targetType: TargetType.USER,
+            targetId: findUser.id,
+            errorCode: 'EMAIL_ALREADY_VERIFIED',
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email: findUser.email,
+            },
+        });
+
         throw new AppError(409, "El usuario ya ha sido verificado", 'EMAIL_ALREADY_VERIFIED');
     }
 
@@ -132,6 +285,21 @@ export const resendVerificationEmailService = async (email: string) => {
         html: `<p>Se ha enviado un nuevo enlace de verificación de correo electrónico. Por favor, verifique su correo electrónico haciendo clic en el siguiente enlace:</p><a href="${process.env.FRONTEND_URL}/verify-email?token=${emailVerificationToken}">Verificar correo electrónico</a>`
     });
 
+    await createAuditLog({
+        action: AUDIT_ACTIONS.VERIFICATION_EMAIL_RESENT,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: findUser.id,
+        actorRole: findUser.role,
+        targetType: TargetType.USER,
+        targetId: findUser.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            email: findUser.email,
+        },
+    });
+
     return {
         message: "Se ha enviado un nuevo enlace de verificación de correo electrónico",
         code: "EMAIL_VERIFICATION_RESENT"
@@ -139,7 +307,7 @@ export const resendVerificationEmailService = async (email: string) => {
 
 }
 
-export const loginService = async (email: string, password: string) => {
+export const loginService = async (email: string, password: string, auditMeta: AuditRequestMeta = {}) => {
 
     const foundCompany = await prisma.user.findUnique({
         where: {
@@ -148,16 +316,64 @@ export const loginService = async (email: string, password: string) => {
     });
 
     if (!foundCompany) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOGIN_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: null,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.USER_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+            },
+        });
+
         throw new AppError(404, 'Usuario no encontrado', 'USER_NOT_FOUND');
     }
 
     if (foundCompany.isActive === false) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOGIN_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.USER,
+            targetId: foundCompany.id,
+            errorCode: AUDIT_ERROR_CODES.ACCOUNT_NOT_ACTIVE,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+            },
+        });
+
         throw new AppError(403, 'Su cuenta no esta activada', 'ACCOUNT_NOT_ACTIVE');
     }
 
     const isValidPassword = await validatePassword(password, foundCompany.passwordHash);
 
     if (!isValidPassword) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOGIN_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.USER,
+            targetId: foundCompany.id,
+            errorCode: AUDIT_ERROR_CODES.INVALID_PASSWORD,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+            },
+        });
+
         throw new AppError(401, 'Contraseña incorrecta', 'INVALID_PASSWORD');
     }
 
@@ -172,6 +388,21 @@ export const loginService = async (email: string, password: string) => {
         }
     }
     );
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.LOGIN_SUCCESS,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: foundCompany.id,
+        actorRole: foundCompany.role,
+        targetType: TargetType.AUTH_SESSION,
+        targetId: session.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            email: foundCompany.email,
+        },
+    });
 
     const refreshTokenJwt = generateRefreshTokenJwt({ id: foundCompany.id, refreshTokenId: session.id, refreshToken: refreshToken });
 
@@ -193,11 +424,24 @@ export const loginService = async (email: string, password: string) => {
 
 }
 
-export const logoutService = async (refreshToken: string) => {
+export const logoutService = async (refreshToken: string, auditMeta: AuditRequestMeta = {}) => {
 
     const decode = validateRefreshToken(refreshToken);
 
     if (!decode) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOGOUT_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: null,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.INVALID_TOKEN,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(401, "Token no valido", 'INVALID_TOKEN');
     }
 
@@ -209,10 +453,26 @@ export const logoutService = async (refreshToken: string) => {
             userId: decode.id,
             refreshToken: hashToken,
             revoked: false
+        },
+        include: {
+            user: true
         }
     });
 
     if (!foundSession) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOGOUT_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.USER,
+            actorId: decode.id,
+            actorRole: null,
+            targetType: TargetType.AUTH_SESSION,
+            targetId: decode.refreshTokenId,
+            errorCode: AUDIT_ERROR_CODES.SESSION_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(404, "Sesión no encontrada", 'SESSION_NOT_FOUND');
     }
 
@@ -225,6 +485,18 @@ export const logoutService = async (refreshToken: string) => {
         }
     });
 
+    await createAuditLog({
+        action: AUDIT_ACTIONS.LOGOUT_SUCCESS,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: decode.id,
+        actorRole: foundSession.user.role,
+        targetType: TargetType.AUTH_SESSION,
+        targetId: foundSession.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+    });
+
     return {
         message: "Logout exitoso",
         code: "LOGOUT_COMPLETED"
@@ -232,7 +504,7 @@ export const logoutService = async (refreshToken: string) => {
 
 }
 
-export const adminRegisterService = async (email: string, firstName: string, lastName: string) => {
+export const adminRegisterService = async (email: string, firstName: string, lastName: string, auditActor: AuditActorContext = {}, auditMeta: AuditRequestMeta = {}) => {
 
     const findAdmin = await prisma.user.findUnique({
         where: {
@@ -241,6 +513,24 @@ export const adminRegisterService = async (email: string, firstName: string, las
     });
 
     if (findAdmin) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.ADMIN_INVITE_FAILED,
+            status: Status.FAILED,
+            actorType: auditActor.actorId ? Actors.USER : Actors.SYSTEM,
+            actorId: auditActor.actorId ?? null,
+            actorRole: auditActor.actorRole ?? null,
+            targetType: TargetType.USER,
+            targetId: findAdmin.id,
+            errorCode: AUDIT_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+                firstName,
+                lastName,
+            },
+        });
+
         throw new AppError(409, 'Email ya registrado', 'EMAIL_ALREADY_EXISTS');
     }
 
@@ -264,12 +554,31 @@ export const adminRegisterService = async (email: string, firstName: string, las
     const secureToken = generateSecureToken();
     const hashSecureToken = hashToken(secureToken);
 
-    await prisma.userInvitation.create({
+    const createdInvitation = await prisma.userInvitation.create({
         data: {
             userId: createdUser.id,
             tokenHash: hashSecureToken,
             expiresAt: new Date(Date.now() + 15 * 60 * 1000),
         }
+    });
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.ADMIN_INVITED,
+        status: Status.SUCCESS,
+        actorType: auditActor.actorId ? Actors.USER : Actors.SYSTEM,
+        actorId: auditActor.actorId ?? null,
+        actorRole: auditActor.actorRole ?? null,
+        targetType: TargetType.USER_INVITATION,
+        targetId: createdInvitation.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            invitedUserId: createdUser.id,
+            email: createdUser.email,
+            role: createdUser.role,
+            firstName,
+            lastName,
+        },
     });
 
     await sendEmail({
@@ -285,7 +594,7 @@ export const adminRegisterService = async (email: string, firstName: string, las
 
 }
 
-export const registerLocalAdminService = async (email: string, firstName: string, lastName: string, municipality: string) => {
+export const registerLocalAdminService = async (email: string, firstName: string, lastName: string, municipality: string, auditActor: AuditActorContext = {}, auditMeta: AuditRequestMeta = {}) => {
 
     const findAdmin = await prisma.user.findUnique({
         where: {
@@ -294,6 +603,25 @@ export const registerLocalAdminService = async (email: string, firstName: string
     });
 
     if (findAdmin) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOCAL_ADMIN_INVITE_FAILED,
+            status: Status.FAILED,
+            actorType: auditActor.actorId ? Actors.USER : Actors.SYSTEM,
+            actorId: auditActor.actorId ?? null,
+            actorRole: auditActor.actorRole ?? null,
+            targetType: TargetType.USER,
+            targetId: findAdmin.id,
+            errorCode: AUDIT_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+                firstName,
+                lastName,
+                municipality,
+            },
+        });
+
         throw new AppError(409, 'Email ya registrado', 'EMAIL_ALREADY_EXISTS');
     }
 
@@ -304,6 +632,24 @@ export const registerLocalAdminService = async (email: string, firstName: string
     });
 
     if (!findMunicipality) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOCAL_ADMIN_INVITE_FAILED,
+            status: Status.FAILED,
+            actorType: auditActor.actorId ? Actors.USER : Actors.SYSTEM,
+            actorId: auditActor.actorId ?? null,
+            actorRole: auditActor.actorRole ?? null,
+            targetType: TargetType.MUNICIPALITY,
+            targetId: municipality,
+            errorCode: AUDIT_ERROR_CODES.MUNICIPALITY_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+                firstName,
+                lastName,
+            },
+        });
+
         throw new AppError(404, 'Municipio no encontrado', 'MUNICIPALITY_NOT_FOUND');
     }
 
@@ -327,12 +673,32 @@ export const registerLocalAdminService = async (email: string, firstName: string
     const secureToken = generateSecureToken();
     const hashSecureToken = hashToken(secureToken);
 
-    await prisma.userInvitation.create({
+    const createdInvitation = await prisma.userInvitation.create({
         data: {
             userId: createdUser.id,
             tokenHash: hashSecureToken,
             expiresAt: new Date(Date.now() + 15 * 60 * 1000),
         }
+    });
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.LOCAL_ADMIN_INVITED,
+        status: Status.SUCCESS,
+        actorType: auditActor.actorId ? Actors.USER : Actors.SYSTEM,
+        actorId: auditActor.actorId ?? null,
+        actorRole: auditActor.actorRole ?? null,
+        municipalityId: findMunicipality.id,
+        targetType: TargetType.USER_INVITATION,
+        targetId: createdInvitation.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            invitedUserId: createdUser.id,
+            email: createdUser.email,
+            role: createdUser.role,
+            firstName,
+            lastName,
+        },
     });
 
     await sendEmail({
@@ -348,7 +714,7 @@ export const registerLocalAdminService = async (email: string, firstName: string
 
 }
 
-export const registerLocalEvaluatorService = async (email: string, firstName: string, lastName: string, adminId: string) => {
+export const registerLocalEvaluatorService = async (email: string, firstName: string, lastName: string, adminId: string, auditMeta: AuditRequestMeta = {}) => {
 
     const findEvaluator = await prisma.user.findUnique({
         where: {
@@ -357,6 +723,24 @@ export const registerLocalEvaluatorService = async (email: string, firstName: st
     });
 
     if (findEvaluator) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOCAL_EVALUATOR_INVITE_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.USER,
+            actorId: adminId,
+            actorRole: null,
+            targetType: TargetType.USER,
+            targetId: findEvaluator.id,
+            errorCode: AUDIT_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+                firstName,
+                lastName,
+            },
+        });
+
         throw new AppError(409, 'Email ya registrado', 'EMAIL_ALREADY_EXISTS');
     }
 
@@ -375,6 +759,25 @@ export const registerLocalEvaluatorService = async (email: string, firstName: st
     });
 
     if (!admin || !admin.localAdminProfile) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.LOCAL_EVALUATOR_INVITE_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: null,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.ADMIN_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                adminId,
+                email,
+                firstName,
+                lastName,
+            },
+        });
+
         throw new AppError(404, 'Administrador no encontrado', 'ADMIN_NOT_FOUND');
     }
 
@@ -398,12 +801,32 @@ export const registerLocalEvaluatorService = async (email: string, firstName: st
     const secureToken = generateSecureToken();
     const hashSecureToken = hashToken(secureToken);
 
-    await prisma.userInvitation.create({
+    const createdInvitation = await prisma.userInvitation.create({
         data: {
             userId: createdUser.id,
             tokenHash: hashSecureToken,
             expiresAt: new Date(Date.now() + 15 * 60 * 1000),
         }
+    });
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.LOCAL_EVALUATOR_INVITED,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: admin.id,
+        actorRole: admin.role,
+        municipalityId: admin.localAdminProfile.municipalityId,
+        targetType: TargetType.USER_INVITATION,
+        targetId: createdInvitation.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            invitedUserId: createdUser.id,
+            email: createdUser.email,
+            role: createdUser.role,
+            firstName,
+            lastName,
+        },
     });
 
     await sendEmail({
@@ -418,25 +841,73 @@ export const registerLocalEvaluatorService = async (email: string, firstName: st
     };
 }
 
-export const createPasswordService = async (token: string, password: string) => {
+export const createPasswordService = async (token: string, password: string, auditMeta: AuditRequestMeta = {}) => {
 
     const hashTokenValue = hashToken(token);
 
     const foundInvitation = await prisma.userInvitation.findUnique({
         where: {
             tokenHash: hashTokenValue,
+        },
+        include: {
+            user: true
         }
     });
 
     if (!foundInvitation) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.INVITATION_PASSWORD_CREATION_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.USER_INVITATION,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.INVITATION_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(404, "Invitacion no encontrada", 'INVITATION_NOT_FOUND');
     }
 
     if (foundInvitation.expiresAt < new Date()) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.INVITATION_PASSWORD_CREATION_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.USER_INVITATION,
+            targetId: foundInvitation.id,
+            errorCode: AUDIT_ERROR_CODES.INVITATION_EXPIRED,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                userId: foundInvitation.userId,
+            },
+        });
+
         throw new AppError(400, "Invitacion expirada", 'INVITATION_EXPIRED');
     }
 
     if (foundInvitation.usedAt !== null) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.INVITATION_PASSWORD_CREATION_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.USER_INVITATION,
+            targetId: foundInvitation.id,
+            errorCode: AUDIT_ERROR_CODES.INVITATION_USED,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                userId: foundInvitation.userId,
+            },
+        });
+
         throw new AppError(400, "Invitacion ya usada", 'INVITATION_USED');
     }
 
@@ -459,13 +930,29 @@ export const createPasswordService = async (token: string, password: string) => 
         }
     });
 
+    await createAuditLog({
+        action: AUDIT_ACTIONS.INVITATION_PASSWORD_CREATED,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: foundInvitation.userId,
+        actorRole: foundInvitation.user.role,
+        targetType: TargetType.USER,
+        targetId: foundInvitation.userId,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            invitationId: foundInvitation.id,
+            email: foundInvitation.user.email,
+        },
+    });
+
     return {
         message: "Contraseña creada exitosamente",
         code: "PASSWORD_CREATED_COMPLETED"
     };
 }
 
-export const changePasswordService = async (password: string, oldPassword: string, userId: string) => {
+export const changePasswordService = async (password: string, oldPassword: string, userId: string, auditMeta: AuditRequestMeta = {}) => {
 
     const user = await prisma.user.findUnique({
         where: {
@@ -474,12 +961,41 @@ export const changePasswordService = async (password: string, oldPassword: strin
     });
 
     if (!user) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.PASSWORD_CHANGE_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.USER,
+            targetId: userId,
+            errorCode: AUDIT_ERROR_CODES.USER_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(404, "Usuario no encontrado", 'USER_NOT_FOUND');
     }
 
     const isValidPassword = await validatePassword(oldPassword, user.passwordHash);
 
     if (!isValidPassword) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.PASSWORD_CHANGE_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.USER,
+            actorId: user.id,
+            actorRole: user.role,
+            targetType: TargetType.USER,
+            targetId: user.id,
+            errorCode: AUDIT_ERROR_CODES.INVALID_PASSWORD,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email: user.email,
+            },
+        });
+
         throw new AppError(401, "Contraseña incorrecta", 'INVALID_PASSWORD');
     }
 
@@ -490,6 +1006,21 @@ export const changePasswordService = async (password: string, oldPassword: strin
         data: {
             passwordHash: await hashPassword(password)
         }
+    });
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.PASSWORD_CHANGED,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: user.id,
+        actorRole: user.role,
+        targetType: TargetType.USER,
+        targetId: user.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            email: user.email,
+        },
     });
 
     await sendEmail({
@@ -504,7 +1035,7 @@ export const changePasswordService = async (password: string, oldPassword: strin
     };
 }
 
-export const recoverPasswordService = async (email: string) => {
+export const recoverPasswordService = async (email: string, auditMeta: AuditRequestMeta = {}) => {
 
     const user = await prisma.user.findUnique({
         where: {
@@ -513,18 +1044,49 @@ export const recoverPasswordService = async (email: string) => {
     });
 
     if (!user) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.PASSWORD_RECOVERY_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: null,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.USER_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                email,
+            },
+        });
+
         throw new AppError(404, "Usuario no encontrado", 'USER_NOT_FOUND');
     }
 
     const secureToken = generateSecureToken();
     const hashSecureToken = hashToken(secureToken);
 
-    await prisma.passwordResetToken.create({
+    const passwordResetToken = await prisma.passwordResetToken.create({
         data: {
             userId: user.id,
             token: hashSecureToken,
             expiresAt: new Date(Date.now() + 15 * 60 * 1000),
         }
+    });
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.PASSWORD_RECOVERY_REQUESTED,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: user.id,
+        actorRole: user.role,
+        targetType: TargetType.PASSWORD_RESET_TOKEN,
+        targetId: passwordResetToken.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            email: user.email,
+        },
     });
 
     await sendEmail({
@@ -539,25 +1101,73 @@ export const recoverPasswordService = async (email: string) => {
     };
 }
 
-export const newPasswordService = async (token: string, password: string) => {
+export const newPasswordService = async (token: string, password: string, auditMeta: AuditRequestMeta = {}) => {
 
     const hashTokenValue = hashToken(token);
 
     const foundToken = await prisma.passwordResetToken.findUnique({
         where: {
             token: hashTokenValue,
+        },
+        include: {
+            user: true
         }
     });
 
     if (!foundToken) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.PASSWORD_RESET_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.PASSWORD_RESET_TOKEN,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.TOKEN_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(404, "Token no encontrado", 'TOKEN_NOT_FOUND');
     }
 
     if (foundToken.expiresAt < new Date()) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.PASSWORD_RESET_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.PASSWORD_RESET_TOKEN,
+            targetId: foundToken.id,
+            errorCode: AUDIT_ERROR_CODES.TOKEN_EXPIRED,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                userId: foundToken.userId,
+            },
+        });
+
         throw new AppError(400, "Token expirado", 'TOKEN_EXPIRED');
     }
 
     if (foundToken.expiresAt < new Date()) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.PASSWORD_RESET_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.PASSWORD_RESET_TOKEN,
+            targetId: foundToken.id,
+            errorCode: AUDIT_ERROR_CODES.TOKEN_USED,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+            additionalData: {
+                userId: foundToken.userId,
+            },
+        });
+
         throw new AppError(400, "Token ya usado", 'TOKEN_USED');
     }
 
@@ -576,31 +1186,89 @@ export const newPasswordService = async (token: string, password: string) => {
         }
     });
 
+    await createAuditLog({
+        action: AUDIT_ACTIONS.PASSWORD_RESET_COMPLETED,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: foundToken.userId,
+        actorRole: foundToken.user.role,
+        targetType: TargetType.USER,
+        targetId: foundToken.userId,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
+        additionalData: {
+            resetTokenId: foundToken.id,
+            email: foundToken.user.email,
+        },
+    });
+
     return {
         message: "Contraseña cambiada exitosamente",
         code: "PASSWORD_CHANGED_COMPLETED"
     };
 }
 
-export const closeSessionUnauthService = async (token: string) => {
+export const closeSessionUnauthService = async (token: string, auditMeta: AuditRequestMeta = {}) => {
 
     const hashTokenValue = hashToken(token);
 
     const foundSession = await prisma.session.findUnique({
         where: {
             refreshToken: hashTokenValue,
+        },
+        include: {
+            user: true
         }
     });
 
     if (!foundSession) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.SESSION_CLOSE_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.ANONYMOUS,
+            actorId: null,
+            actorRole: null,
+            targetType: TargetType.AUTH_SESSION,
+            targetId: null,
+            errorCode: AUDIT_ERROR_CODES.TOKEN_NOT_FOUND,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(404, "Token no encontrado", 'TOKEN_NOT_FOUND');
     }
 
     if (foundSession.expiresAt < new Date()) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.SESSION_CLOSE_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.USER,
+            actorId: foundSession.userId,
+            actorRole: foundSession.user.role,
+            targetType: TargetType.AUTH_SESSION,
+            targetId: foundSession.id,
+            errorCode: AUDIT_ERROR_CODES.TOKEN_EXPIRED,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(400, "Token expirado", 'TOKEN_EXPIRED');
     }
 
     if (foundSession.revoked) {
+        await createAuditLog({
+            action: AUDIT_ACTIONS.SESSION_CLOSE_FAILED,
+            status: Status.FAILED,
+            actorType: Actors.USER,
+            actorId: foundSession.userId,
+            actorRole: foundSession.user.role,
+            targetType: TargetType.AUTH_SESSION,
+            targetId: foundSession.id,
+            errorCode: AUDIT_ERROR_CODES.SESSION_CLOSED,
+            ipAddress: auditMeta.ipAddress ?? null,
+            userAgent: auditMeta.userAgent ?? null,
+        });
+
         throw new AppError(400, "Sesion ya cerrada", 'SESSION_CLOSED');
     }
 
@@ -611,6 +1279,18 @@ export const closeSessionUnauthService = async (token: string) => {
         data: {
             revoked: true
         }
+    });
+
+    await createAuditLog({
+        action: AUDIT_ACTIONS.SESSION_CLOSED_BY_SECURITY_LINK,
+        status: Status.SUCCESS,
+        actorType: Actors.USER,
+        actorId: foundSession.userId,
+        actorRole: foundSession.user.role,
+        targetType: TargetType.AUTH_SESSION,
+        targetId: foundSession.id,
+        ipAddress: auditMeta.ipAddress ?? null,
+        userAgent: auditMeta.userAgent ?? null,
     });
 
     return {

@@ -15,11 +15,16 @@ import {
     newPasswordSchema
 } from './auth.users.schema';
 
+const getAuditMeta = (req: Request) => ({
+    ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0] ?? req.ip ?? null,
+    userAgent: req.get('user-agent') ?? null
+});
+
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password, ruc, companyName } = registerSchema.parse(req.body);
 
-        const responseService = await AuthServices.registerService(email, password, ruc, companyName);
+        const responseService = await AuthServices.registerService(email, password, ruc, companyName, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -36,7 +41,7 @@ export const verifyEmailController = async (req: Request, res: Response, next: N
     try {
         const { token } = verifyEmailSchema.parse(req.params);
 
-        const responseService = await AuthServices.verifyEmailService(token);
+        const responseService = await AuthServices.verifyEmailService(token, getAuditMeta(req));
 
         res.status(200).json({
             success: true,
@@ -53,7 +58,7 @@ export const resendVerificationEmailController = async (req: Request, res: Respo
     try {
         const { email } = resendVerificationEmailSchema.parse(req.params);
 
-        const responseService = await AuthServices.resendVerificationEmailService(email);
+        const responseService = await AuthServices.resendVerificationEmailService(email, getAuditMeta(req));
 
         res.status(200).json({
             success: true,
@@ -70,7 +75,7 @@ export const loginController = async (req: Request, res: Response, next: NextFun
     try {
         const { email, password } = loginSchema.parse(req.body);
 
-        const responseService = await AuthServices.loginService(email, password);
+        const responseService = await AuthServices.loginService(email, password, getAuditMeta(req));
 
         res.cookie('refreshToken', responseService.refreshToken, {
             httpOnly: true,
@@ -103,7 +108,7 @@ export const logoutController = async (req: Request, res: Response, next: NextFu
 
         const refreshToken = req.cookies.refreshToken;
 
-        const responseService = await AuthServices.logoutService(refreshToken);
+        const responseService = await AuthServices.logoutService(refreshToken, getAuditMeta(req));
 
         res.clearCookie('refreshToken');
         res.clearCookie('token');
@@ -135,9 +140,14 @@ export const verifyAuthController = async (req: Request, res: Response, next: Ne
 export const adminRegisterController = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
+        const user = (req as any).user;
+
         const { email, firstName, lastName } = adminRegisterSchema.parse(req.body);
 
-        const responseService = await AuthServices.adminRegisterService(email, firstName, lastName);
+        const responseService = await AuthServices.adminRegisterService(email, firstName, lastName, {
+            actorId: user?.userId ?? null,
+            actorRole: user?.role ?? null
+        }, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -153,9 +163,14 @@ export const adminRegisterController = async (req: Request, res: Response, next:
 export const registerLocalAdminController = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
+        const user = (req as any).user;
+
         const { email, firstName, lastName, municipality } = registerLocalAdminSchema.parse(req.body);
 
-        const responseService = await AuthServices.registerLocalAdminService(email, firstName, lastName, municipality);
+        const responseService = await AuthServices.registerLocalAdminService(email, firstName, lastName, municipality, {
+            actorId: user?.userId ?? null,
+            actorRole: user?.role ?? null
+        }, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -173,7 +188,7 @@ export const registerLocalEvaluatorController = async (req: Request, res: Respon
     try {
         const { email, firstName, lastName } = registerLocalEvaluatorSchema.parse(req.body);
 
-        const responseService = await AuthServices.registerLocalEvaluatorService(email, firstName, lastName, user.userId);
+        const responseService = await AuthServices.registerLocalEvaluatorService(email, firstName, lastName, user.userId, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -192,7 +207,7 @@ export const createPasswordController = async (req: Request, res: Response, next
         const { token } = tokenSchema.parse(req.query);
         const { password } = passwordSchema.parse(req.body);
 
-        const responseService = await AuthServices.createPasswordService(token, password);
+        const responseService = await AuthServices.createPasswordService(token, password, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -212,7 +227,7 @@ export const changePasswordController = async (req: Request, res: Response, next
 
         const user = (req as any).user;
 
-        const responseService = await AuthServices.changePasswordService(password, oldPassword, user.userId);
+        const responseService = await AuthServices.changePasswordService(password, oldPassword, user.userId, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -230,7 +245,7 @@ export const recoverPasswordController = async (req: Request, res: Response, nex
 
         const { email } = recoverPasswordSchema.parse(req.body);
 
-        const responseService = await AuthServices.recoverPasswordService(email);
+        const responseService = await AuthServices.recoverPasswordService(email, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -249,7 +264,7 @@ export const newPasswordController = async (req: Request, res: Response, next: N
         const { token } = tokenSchema.parse(req.params);
         const { password } = newPasswordSchema.parse(req.body);
 
-        const responseService = await AuthServices.newPasswordService(token, password);
+        const responseService = await AuthServices.newPasswordService(token, password, getAuditMeta(req));
 
         res.status(201).json({
             success: true,
@@ -267,7 +282,7 @@ export const closeSessionUnauthController = async (req: Request, res: Response, 
 
         const { token } = tokenSchema.parse(req.params);
 
-        const responseService = await AuthServices.closeSessionUnauthService(token);
+        const responseService = await AuthServices.closeSessionUnauthService(token, getAuditMeta(req));
 
         res.status(200).json({
             success: true,
