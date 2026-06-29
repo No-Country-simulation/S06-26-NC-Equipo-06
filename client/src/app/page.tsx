@@ -7,8 +7,8 @@ export default function Home() {
       <main className="">
         {/* Section: Hero */}
         <section className="bg-[#e9f2f3] gap-8 px-6 pt-16 pb-24 flex flex-col justify-center">
-          <span className="block mx-auto text-label-text bg-label-background py-2 px-4 rounded-full">
-            Plataforma de Nueva Generación
+          <span className="flex items-center gap-2 mx-auto text-label-text bg-label-background py-2 px-4 rounded-full font-semibold">
+            <FeatureIcon height={18} fill="#5c6675" /> Plataforma de Nueva Generación
           </span>
           <h1 className="font-bold leading-8.75 mx-auto text-[28px] max-w-78.5 text-center text-[#181C1D]">
             El estándar digital para
