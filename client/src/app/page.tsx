@@ -22,8 +22,8 @@ export default function Home() {
             en tus procesos de licitación.
           </p>
           <div className="flex gap-4 flex-col">
-            <button className="rounded-xl bg-primary text-white py-4 w-full">Registrar mi Empresa</button>
-            <button className="rounded-xl border border-primary text-primary py-4 w-full">Demo para entidades</button>
+            <button className="rounded-xl bg-primary text-white py-4 w-full font-bold">Registrar mi Empresa</button>
+            <button className="rounded-xl border border-primary text-primary py-4 w-full font-bold">Demo para entidades</button>
           </div>
           <div className="bg-grey-4 w-full aspect-square rounded-3xl mx-auto">
             {/* Imagen del Hero */}
@@ -99,23 +99,23 @@ export default function Home() {
         {/* Section: Metricas */}
         <section className="bg-primary py-10 px-6">
           <ul className="grid grid-cols-1 gap-12 text-center text-white">
-            <li className="max-w-50 mx-auto">
+            <li className="max-w-50 mx-auto space-y-2">
               <p className="text-4xl font-bold">45%</p>
-              <p>
+              <p className="text-white font-medium">
                 de postores descalificados por errores formales
                 manuales.
               </p>
             </li>
-            <li className="max-w-50 mx-auto">
+            <li className="max-w-50 mx-auto space-y-2">
               <p className="text-4xl font-bold">15 Días</p>
-              <p>
+              <p className="text-white font-medium">
                 reducidos a minutos para
                 revisión de expedientes.
               </p>
             </li>
-            <li className="max-w-50 mx-auto">
+            <li className="max-w-50 mx-auto space-y-2">
               <p className="text-4xl font-bold">S/. 0</p>
-              <p>
+              <p className="text-white font-medium">
                 pérdidas estimadas por
                 procesos declarados
                 desiertos.
