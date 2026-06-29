@@ -5,6 +5,12 @@
   --foreground: #171717;
 }
 
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}
+
 @theme {
   --color-primary: #006872;
   --color-background: #ffffff;
