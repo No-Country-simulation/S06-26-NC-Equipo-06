@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { redirectPerRole } from "@/context/AuthContext";
 import LoginForm from "./components/LoginForm";
+import Footer from "@/components/footer";
+import Link from "next/link";
 
 const Login = () => {
     const { role, isLoading } = useAuth();
@@ -25,10 +27,21 @@ const Login = () => {
     }
 
     return (
-        <div>
-            <h1>Iniciar Sesión</h1>
-            <LoginForm />
-        </div>
+        <>
+            <header className="flex gap-2 items-center w-full justify-center py-4.5 bg-background-2 shadow-custom">
+                <img className="h-6 w-auto" src="/logo.svg" alt="Logo Lictia" />
+                <p className="text-2xl font-bold text-primary">Lictia</p>
+            </header>
+            <main className="bg-background-2">
+                <LoginForm />
+                <div className="flex gap-1 justify-center">
+                    <p className="text-center text-text-2">
+                        ¿No tienes una cuenta?
+                    </p>
+                    <Link href="/auth/company/register" className="text-primary">Registrarse</Link>
+                </div>
+            </main>
+        </>
     );
 };
 

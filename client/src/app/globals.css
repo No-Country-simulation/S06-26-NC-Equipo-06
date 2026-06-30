@@ -29,6 +29,7 @@
   --color-grey-2: #d7dce3;
   --color-grey-1: #edeff3;
   --color-white: #ffffff;
+  --shadow-custom: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 @theme inline {

@@ -8,7 +8,7 @@ const Header = () => {
     const { logout, isAuthenticated } = useAuth();
 
     return (
-        <header className="bg-[#F3FBFF] shadow-[0_4px_16px_rgba(0,0,0,0.15)]">
+        <header className="bg-[#F3FBFF] shadow-custom">
             <div className="flex justify-between md:justify-start items-center max-w-7xl md:mx-auto py-5 px-6 ">
                 <div className="flex gap-2 items-center">
                     <img src="/logo.svg" alt="Logo" width={24} height={24} />

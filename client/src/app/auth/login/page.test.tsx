@@ -59,7 +59,8 @@ describe("Login Page", () => {
         });
 
         renderLogin();
-        expect(screen.getByRole("heading", { name: /iniciar sesión/i })).toBeInTheDocument();
+        expect(screen.getByText("Lictia")).toBeInTheDocument();
+        expect(screen.getByAltText("Logo Lictia")).toBeInTheDocument();
         expect(screen.getByTestId("login-form")).toBeInTheDocument();
     });
 
