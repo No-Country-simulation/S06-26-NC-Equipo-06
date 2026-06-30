@@ -36,22 +36,24 @@ export default function Home() {
           </div>
         </section>
         { /* Section: Transparencia y Eficiencia */}
-        <section className="bg-background py-24 space-y-4 px-6">
-          <h2 className="text-[28px] font-semibold text-center max-w-56 mx-auto">
+        <section className="py-24 space-y-4 px-6 max-w-7xl md:mx-auto">
+          <h2 className="text-[28px] md:text-[32px] font-semibold md:font-bold text-center max-w-56 md:max-w-fit  mx-auto">
             Transparencia y Eficiencia
           </h2>
-          <p className="text-text-1 text-center">
+          <p className="text-text-1 text-center max-w-212.5 mx-auto">
             Diseñado para modernizar cada etapa del
             proceso de contratación, desde la
             convocatoria hasta la adjudicación final.
           </p>
-          <div className="grid grid-cols-1 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <article className="w-full p-8 rounded-xl border border-grey-2">
               <div className="space-y-4">
-                <div className="size-14 flex items-center mx-auto justify-center rounded-lg bg-primary">
-                  <img src="/Icon/Security.svg" alt="Icono Security" />
+                <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                  <div className="size-14 flex items-center mx-auto md:mx-0 justify-center rounded-lg bg-primary">
+                    <img src="/Icon/Security.svg" alt="Icono Security" />
+                  </div>
+                  <h3 className="text-xl font-semibold max-w-60 md:max-w-fit mx-auto md:mx-0 text-center md:text-left">Postula con Confianza y Cero Errores</h3>
                 </div>
-                <h3 className="text-xl font-semibold max-w-60 mx-auto text-center">Postula con Confianza y Cero Errores</h3>
                 <p className="text-text-1">
                   Diseñado específicamente para proveedores del estado, garantizando
                   el cumplimiento estricto de las bases integradas para evitar
@@ -59,15 +61,15 @@ export default function Home() {
                 </p>
                 <ul className="grid grid-cols-2 gap-6 pt-4 border-t border-grey-2">
                   <li className="space-y-2">
-                    <img src="/Icon/Alert.svg" alt="Icon alert" className="size-4" />
-                    <h4 className="text-sm font-semibold">Alertas de Descalificación</h4>
-                    <p className="text-xs">Detección temprana de inconsistencias
+                    <img src="/Icon/Alert.svg" alt="Icon alert" className="size-4 md:size-6" />
+                    <h4 className="text-sm md:text-base font-semibold">Alertas de Descalificación</h4>
+                    <p className="text-xs md:text-sm">Detección temprana de inconsistencias
                       antes de enviar tu propuesta.</p>
                   </li>
                   <li className="space-y-2">
-                    <img src="/Icon/Stars.svg" alt="Icon alert" className="size-4" />
-                    <h4 className="text-sm font-semibold">Generación Automatizada</h4>
-                    <p className="text-xs">Creación instantánea de Anexos 1, 2 y 3 con
+                    <img src="/Icon/Stars.svg" alt="Icon alert" className="size-4 md:size-6" />
+                    <h4 className="text-sm md:text-base font-semibold">Generación Automatizada</h4>
+                    <p className="text-xs md:text-sm">Creación instantánea de Anexos 1, 2 y 3 con
                       datos verificados.</p>
                   </li>
                 </ul>
@@ -75,10 +77,12 @@ export default function Home() {
             </article>
             <article className="w-full p-8 rounded-xl border border-grey-2">
               <div className="space-y-4">
-                <div className="size-14 flex items-center mx-auto justify-center rounded-lg bg-primary">
-                  <img src="/Icon/Audit.svg" alt="Icono Auditoria" />
+                <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                  <div className="size-14 flex items-center mx-auto md:mx-0 justify-center rounded-lg bg-primary">
+                    <img src="/Icon/Audit.svg" alt="Icono Auditoria" />
+                  </div>
+                  <h3 className="text-xl font-semibold max-w-60 md:max-w-fit mx-auto md:mx-0 text-center md:text-left">Auditoría Transparente en Segundos</h3>
                 </div>
-                <h3 className="text-xl font-semibold max-w-60 mx-auto text-center">Auditoría Transparente en Segundos</h3>
                 <p className="text-text-1">
                   Herramientas robustas para comités de selección, asegurando
                   procesos limpios, auditables y con un motor de reglas digitalizado de
@@ -86,16 +90,16 @@ export default function Home() {
                 </p>
                 <ul className="grid grid-cols-2 gap-6 pt-4 border-t border-grey-2">
                   <li className="space-y-2">
-                    <img src="/Icon/Form.svg" alt="Icono formulario" className="size-4" />
-                    <h4 className="text-sm font-semibold">Diseñador de Formularios</h4>
-                    <p className="text-xs">
+                    <img src="/Icon/Form.svg" alt="Icono formulario" className="size-4 md:size-6" />
+                    <h4 className="text-sm md:text-base font-semibold">Diseñador de Formularios</h4>
+                    <p className="text-xs md:text-sm">
                       Estructura requerimientos técnicos de forma
                       estandarizada.</p>
                   </li>
                   <li className="space-y-2">
-                    <img src="/Icon/Rules.svg" alt="Icono reglas digitales" className="size-4" />
-                    <h4 className="text-sm font-semibold">Motor de Reglas Digital</h4>
-                    <p className="text-xs">Clasificación automática de postores en "Aptos" u "Observados".</p>
+                    <img src="/Icon/Rules.svg" alt="Icono reglas digitales" className="size-4 md:size-6" />
+                    <h4 className="text-sm md:text-base font-semibold">Motor de Reglas Digital</h4>
+                    <p className="text-xs md:text-sm">Clasificación automática de postores en "Aptos" u "Observados".</p>
                   </li>
                 </ul>
               </div>
@@ -104,23 +108,23 @@ export default function Home() {
         </section>
         {/* Section: Metricas */}
         <section className="bg-primary py-10 px-6">
-          <ul className="grid grid-cols-1 gap-12 text-center text-white">
-            <li className="max-w-50 mx-auto space-y-2">
-              <p className="text-4xl font-bold">45%</p>
+          <ul className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center text-white max-w-7xl md:mx-auto">
+            <li className="max-w-50 md:max-w-55  mx-auto space-y-2">
+              <p className="text-4xl font-bold md:font-black md:text-[56px]">45%</p>
               <p className="text-white font-medium">
                 de postores descalificados por errores formales
                 manuales.
               </p>
             </li>
-            <li className="max-w-50 mx-auto space-y-2">
-              <p className="text-4xl font-bold">15 Días</p>
+            <li className="max-w-50 md:max-w-55 mx-auto space-y-2">
+              <p className="text-4xl font-bold md:font-black md:text-[56px]">15 Días</p>
               <p className="text-white font-medium">
                 reducidos a minutos para
                 revisión de expedientes.
               </p>
             </li>
-            <li className="max-w-50 mx-auto space-y-2">
-              <p className="text-4xl font-bold">S/. 0</p>
+            <li className="max-w-50 md:max-w-55 mx-auto space-y-2">
+              <p className="text-4xl font-bold md:font-black md:text-[56px]">S/. 0</p>
               <p className="text-white font-medium">
                 pérdidas estimadas por
                 procesos declarados
@@ -132,7 +136,7 @@ export default function Home() {
         {/* Section: Precios */}
         <section className="py-24 px-6 bg-background-2">
           <div className="space-y-4 mb-16">
-            <h2 className="text-[28px] font-semibold text-center mx-auto leading-9.5">
+            <h2 className="text-[28px] md:text-[32px] md:font-bold font-semibold text-center mx-auto leading-9.5">
               Planes diseñados para
               la transparencia
             </h2>
@@ -141,8 +145,8 @@ export default function Home() {
               tu rol en la contratación pública.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-8">
-            <article className="p-8 bg-background rounded-3xl space-y-8">
+          <div className="grid grid-cols-1 gap-8 max-w-7xl md:mx-auto md:grid-cols-2">
+            <article className="md:py-16 md:max-w-108  md:ml-auto p-8 bg-background rounded-3xl space-y-8">
               <div className="space-y-1">
                 <h3 className="text-xl text-primary font-semibold leading-8">Plan Proveedor</h3>
                 <p>
@@ -167,7 +171,7 @@ export default function Home() {
                 Comenzar Prueba
               </button>
             </article>
-            <article className="p-8 bg-primary rounded-3xl space-y-8 relative overflow-hidden">
+            <article className="md:py-16 md:max-w-108  md:mr-auto p-8 bg-primary rounded-3xl space-y-8 relative overflow-hidden">
               <span className="bg-white text-primary w-40 py-1 text-[8px] absolute text-center -right-10 top-10 rotate-45 font-bold">RECOMENDADO</span>
               <div className="space-y-1">
                 <h3 className="text-xl text-white font-semibold leading-8">Plan Institucional</h3>
