@@ -1,3 +1,4 @@
+import Footer from "@/components/footer";
 import Header from "@/components/header";
 
 export default function Home() {
@@ -200,16 +201,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="p-6 bg-background-2 w-full shadow-[0_4px_16px_rgba(0,0,0,0.15)]">
-        <ul className="flex gap-4 w-fit mx-auto text-center text-sm text-text-1">
-          <li>Términos y Condiciones</li>
-          <li>Privacidad</li>
-          <li>Ayuda</li>
-        </ul>
-        <small className="block mx-auto text-center mt-2 max-w-50 font-medium text-text-1">
-          © <time dateTime="2026">2026</time> Lictia. Todos los derechos reservados.
-        </small>
-      </footer>
+      <Footer />
     </>
   );
 }
