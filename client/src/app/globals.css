@@ -30,6 +30,9 @@
   --color-grey-1: #edeff3;
   --color-white: #ffffff;
   --shadow-custom: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --color-error: #DC2626;
+  --color-success: #15803D;
+  --color-warning: #DB7628;
 }
 
 @theme inline {

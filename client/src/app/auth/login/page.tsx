@@ -32,7 +32,7 @@ const Login = () => {
                 <img className="h-6 w-auto" src="/logo.svg" alt="Logo Lictia" />
                 <p className="text-2xl font-bold text-primary">Lictia</p>
             </header>
-            <main className="bg-background-2">
+            <main className="bg-background-2 py-16">
                 <LoginForm />
                 <div className="flex gap-1 justify-center">
                     <p className="text-center text-text-2">

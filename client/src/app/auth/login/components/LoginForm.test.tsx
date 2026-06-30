@@ -20,13 +20,13 @@ describe("LoginForm Component", () => {
 
         expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /iniciar sesión/i })).toBeInTheDocument();
     });
 
     it("shows validation error messages when submitting empty fields", async () => {
         render(<LoginForm />);
 
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
+        const submitButton = screen.getByRole("button", { name: /iniciar sesión/i });
         fireEvent.click(submitButton);
 
         await waitFor(() => {
@@ -62,7 +62,7 @@ describe("LoginForm Component", () => {
 
         const emailInput = screen.getByLabelText(/correo electrónico/i);
         const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
+        const submitButton = screen.getByRole("button", { name: /iniciar sesión/i });
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -82,7 +82,7 @@ describe("LoginForm Component", () => {
 
         const emailInput = screen.getByLabelText(/correo electrónico/i);
         const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
+        const submitButton = screen.getByRole("button", { name: /iniciar sesión/i });
 
         fireEvent.change(emailInput, { target: { value: "test@example.com" } });
         fireEvent.change(passwordInput, { target: { value: "password123" } });
