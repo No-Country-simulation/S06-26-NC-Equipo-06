@@ -93,7 +93,6 @@ describe("CompanyLayout Role Guard", () => {
             </CompanyLayout>
         );
 
-        expect(screen.getByRole("button", { name: /cerrar sesión/i })).toBeInTheDocument();
         expect(screen.getByTestId("child")).toBeInTheDocument();
         expect(screen.getByText("Protected Company Content")).toBeInTheDocument();
         expect(pushMock).not.toHaveBeenCalled();

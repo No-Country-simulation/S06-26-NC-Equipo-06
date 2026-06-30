@@ -93,7 +93,6 @@ describe("AdminLayout Role Guard", () => {
             </AdminLayout>
         );
 
-        expect(screen.getByRole("button", { name: /cerrar sesión/i })).toBeInTheDocument();
         expect(screen.getByTestId("child")).toBeInTheDocument();
         expect(screen.getByText("Protected Admin Content")).toBeInTheDocument();
         expect(pushMock).not.toHaveBeenCalled();

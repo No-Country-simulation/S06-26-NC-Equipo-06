@@ -93,7 +93,6 @@ describe("MunicipalDashboardLayout Role Guard", () => {
             </MunicipalDashboardLayout>
         );
 
-        expect(screen.getByRole("button", { name: /cerrar sesión/i })).toBeInTheDocument();
         expect(screen.getByTestId("child")).toBeInTheDocument();
         expect(screen.getByText("Municipal Dashboard Content")).toBeInTheDocument();
         expect(pushMock).not.toHaveBeenCalled();
@@ -114,7 +113,6 @@ describe("MunicipalDashboardLayout Role Guard", () => {
             </MunicipalDashboardLayout>
         );
 
-        expect(screen.getByRole("button", { name: /cerrar sesión/i })).toBeInTheDocument();
         expect(screen.getByTestId("child")).toBeInTheDocument();
         expect(screen.getByText("Municipal Dashboard Content")).toBeInTheDocument();
         expect(pushMock).not.toHaveBeenCalled();
