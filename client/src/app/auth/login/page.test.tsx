@@ -1,8 +1,8 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import Login from "./page";
-import { loginService } from "@/services/auth.service";
 import { AuthProvider } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 
 const pushMock = vi.fn();
 
@@ -13,13 +13,13 @@ vi.mock("next/navigation", () => ({
     usePathname: () => "/auth/login",
 }));
 
-vi.mock("@/services/auth.service", () => ({
-    loginService: vi.fn().mockResolvedValue({
-        success: true,
-        code: "200",
-        message: "Login correcto",
-        role: "ADMIN",
-    }),
+vi.mock("@/hooks/useAuth", () => ({
+    default: vi.fn(),
+}));
+
+// Mock del componente LoginForm para aislar la página
+vi.mock("./components/LoginForm", () => ({
+    default: () => <div data-testid="login-form">Mocked LoginForm</div>,
 }));
 
 describe("Login Page", () => {
@@ -35,132 +35,76 @@ describe("Login Page", () => {
         );
     };
 
-    it("renders the login form elements correctly", () => {
-        renderLogin();
+    it("renders loading message when session is loading", () => {
+        vi.mocked(useAuth).mockReturnValue({
+            login: vi.fn(),
+            logout: vi.fn(),
+            role: null,
+            isLoading: true,
+            isAuthenticated: false,
+        });
 
+        renderLogin();
+        expect(screen.getByText(/cargando\.\.\./i)).toBeInTheDocument();
+        expect(screen.queryByTestId("login-form")).not.toBeInTheDocument();
+    });
+
+    it("renders the heading and LoginForm when not logged in", () => {
+        vi.mocked(useAuth).mockReturnValue({
+            login: vi.fn(),
+            logout: vi.fn(),
+            role: null,
+            isLoading: false,
+            isAuthenticated: false,
+        });
+
+        renderLogin();
         expect(screen.getByRole("heading", { name: /iniciar sesión/i })).toBeInTheDocument();
-        expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
+        expect(screen.getByTestId("login-form")).toBeInTheDocument();
     });
 
-    it("shows validation error messages when submitting empty fields", async () => {
-        renderLogin();
-
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
-        fireEvent.click(submitButton);
-
-        await waitFor(() => {
-            expect(screen.getByText(/el correo electrónico es requerido/i)).toBeInTheDocument();
-            expect(screen.getByText(/la contraseña es requerida/i)).toBeInTheDocument();
-        });
-    });
-
-    it("shows error for invalid email format and too short password", async () => {
-        renderLogin();
-
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
-        const passwordInput = screen.getByLabelText(/contraseña/i);
-
-        // Change email and blur to trigger validation
-        fireEvent.change(emailInput, { target: { value: "invalid-email" } });
-        fireEvent.blur(emailInput);
-
-        await waitFor(() => {
-            expect(screen.getByText(/el correo electrónico no es válido/i)).toBeInTheDocument();
-        });
-
-        // Change password and blur to trigger validation
-        fireEvent.change(passwordInput, { target: { value: "123" } });
-        fireEvent.blur(passwordInput);
-
-        await waitFor(() => {
-            expect(screen.getByText(/la contraseña debe tener al menos 6 caracteres/i)).toBeInTheDocument();
-        });
-    });
-
-    it("submits the form successfully with valid values", async () => {
-        renderLogin();
-
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
-        const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
-
-        fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-        fireEvent.change(passwordInput, { target: { value: "password123" } });
-        fireEvent.click(submitButton);
-
-        await waitFor(() => {
-            expect(loginService).toHaveBeenCalledWith({
-                email: "test@example.com",
-                password: "password123",
-            });
-        });
-    });
-
-    it("redirects to /admin when user has ADMIN role", async () => {
-        vi.mocked(loginService).mockResolvedValueOnce({
-            success: true,
-            code: "200",
-            message: "Login correcto",
+    it("redirects to /admin when user is authenticated with ADMIN role", async () => {
+        vi.mocked(useAuth).mockReturnValue({
+            login: vi.fn(),
+            logout: vi.fn(),
             role: "ADMIN",
+            isLoading: false,
+            isAuthenticated: true,
         });
 
         renderLogin();
-
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
-        const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
-
-        fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
-        fireEvent.change(passwordInput, { target: { value: "password123" } });
-        fireEvent.click(submitButton);
 
         await waitFor(() => {
             expect(pushMock).toHaveBeenCalledWith("/admin");
         });
     });
 
-    it("redirects to /company when user has COMPANY role", async () => {
-        vi.mocked(loginService).mockResolvedValueOnce({
-            success: true,
-            code: "200",
-            message: "Login correcto",
+    it("redirects to /company when user is authenticated with COMPANY role", async () => {
+        vi.mocked(useAuth).mockReturnValue({
+            login: vi.fn(),
+            logout: vi.fn(),
             role: "COMPANY",
+            isLoading: false,
+            isAuthenticated: true,
         });
 
         renderLogin();
-
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
-        const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
-
-        fireEvent.change(emailInput, { target: { value: "company@example.com" } });
-        fireEvent.change(passwordInput, { target: { value: "password123" } });
-        fireEvent.click(submitButton);
 
         await waitFor(() => {
             expect(pushMock).toHaveBeenCalledWith("/company");
         });
     });
 
-    it("redirects to /municipal when user has MUNICIPAL_ADMIN role", async () => {
-        vi.mocked(loginService).mockResolvedValueOnce({
-            success: true,
-            code: "200",
-            message: "Login correcto",
+    it("redirects to /municipal when user is authenticated with MUNICIPAL_ADMIN role", async () => {
+        vi.mocked(useAuth).mockReturnValue({
+            login: vi.fn(),
+            logout: vi.fn(),
             role: "MUNICIPAL_ADMIN",
+            isLoading: false,
+            isAuthenticated: true,
         });
 
         renderLogin();
-
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
-        const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /entrar/i });
-
-        fireEvent.change(emailInput, { target: { value: "muniadmin@example.com" } });
-        fireEvent.change(passwordInput, { target: { value: "password123" } });
-        fireEvent.click(submitButton);
 
         await waitFor(() => {
             expect(pushMock).toHaveBeenCalledWith("/municipal");
