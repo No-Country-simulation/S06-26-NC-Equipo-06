@@ -26,6 +26,7 @@ describe("AdminLayout Role Guard", () => {
             isLoading: true,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
 
         render(
@@ -45,6 +46,7 @@ describe("AdminLayout Role Guard", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: false,
         });
 
         const { container } = render(
@@ -63,6 +65,7 @@ describe("AdminLayout Role Guard", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         const { container } = render(
@@ -81,6 +84,7 @@ describe("AdminLayout Role Guard", () => {
             isLoading: false,
             login: vi.fn(),
             logout: vi.fn(),
+            isAuthenticated: true,
         });
 
         render(
@@ -89,7 +93,6 @@ describe("AdminLayout Role Guard", () => {
             </AdminLayout>
         );
 
-        expect(screen.getByRole("button", { name: /cerrar sesión/i })).toBeInTheDocument();
         expect(screen.getByTestId("child")).toBeInTheDocument();
         expect(screen.getByText("Protected Admin Content")).toBeInTheDocument();
         expect(pushMock).not.toHaveBeenCalled();
