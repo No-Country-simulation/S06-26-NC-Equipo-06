@@ -100,7 +100,7 @@ export default function Home() {
                   <li className="space-y-2">
                     <img src="/Icon/Rules.svg" alt="Icono reglas digitales" className="size-4 md:size-6" />
                     <h4 className="text-sm md:text-base font-semibold">Motor de Reglas Digital</h4>
-                    <p className="text-xs md:text-sm">Clasificación automática de postores en "Aptos" u "Observados".</p>
+                    <p className="text-xs md:text-sm">Clasificación automática de postores en &quot;Aptos&quot; u &quot;Observados&quot;.</p>
                   </li>
                 </ul>
               </div>
