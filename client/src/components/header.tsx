@@ -33,9 +33,9 @@ const Header = () => {
                 {
                     !isAuthenticated &&
                     <div className="flex gap-4 ml-auto items-center">
-                        <button className="px-4 py-2 text-primary font-semibold hidden md:block">
+                        <Link href="/auth/login" className="px-4 py-2 text-primary font-semibold hidden md:block">
                             Iniciar sesión
-                        </button>
+                        </Link>
                         <ButtonRegister />
                     </div>
                 }
