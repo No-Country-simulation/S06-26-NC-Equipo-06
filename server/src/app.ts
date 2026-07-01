@@ -6,6 +6,7 @@ import { errorHandler } from './middlewares/error.handler';
 import rateLimit from 'express-rate-limit';
 import authUsersRoutes from './modules/auth_users/auth.users.routes';
 import usersRoutes from './modules/users/users.routes';
+import municipalitiesRoutes from './modules/municipalities/municipalities.routes';
 
 const app = express();
 
@@ -34,6 +35,8 @@ app.use(cookieParser());
 app.use('/api/v1/auth-users', authUsersRoutes);
 
 app.use('/api/v1/users', usersRoutes);
+
+app.use('/api/v1/municipalities', municipalitiesRoutes);
 
 app.use(errorHandler);
 
