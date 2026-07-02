@@ -58,7 +58,10 @@ Permite registrar un nuevo usuario con rol `COMPANY` y su perfil de empresa asoc
       "email": "correo@ejemplo.com",
       "password": "contraseña_segura",
       "ruc": "12345678901",
-      "companyName": "Nombre de la Empresa"
+      "companyName": "Nombre de la Empresa",
+      "taxStatus": 'HABIDO' | 'NO_HABIDO' | 'NO_HALLADO',
+      "fiscalAddress": "Av. Corrientes 1234, 5° "A", CABA (Argentina)",
+      "fiscalStaus": true | false
     }
     ```
 * **Respuestas Posibles**:
@@ -204,7 +207,11 @@ Autentica las credenciales y establece las cookies HTTP-Only de sesión `token` 
         "success": true,
         "message": "Inicio de sesión exitoso",
         "code": "LOGIN_COMPLETED",
-        "role": "MUNICIPAL_EVALUATOR"
+        "role": "MUNICIPAL_EVALUATOR",
+        "data": {
+          "name": "Juan Perez" | "Apple" | null,
+          "ruc": "xxxxxxxxxxx" | null
+        }
       }
       ```
   * **`400 Bad Request`** (Cuenta no activa):

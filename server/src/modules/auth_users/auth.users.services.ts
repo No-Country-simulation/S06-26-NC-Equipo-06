@@ -23,6 +23,7 @@ type AuditActorContext = {
 };
 
 export const registerService = async (email: string, password: string, ruc: string, companyName: string, auditMeta: AuditRequestMeta = {}) => {
+export const registerService = async (email: string, password: string, ruc: string, companyName: string, taxStatus: string, fiscalAddress: string, fiscalStatus: boolean) => {
 
     const findCompany = await prisma.user.findUnique({
         where: {
@@ -92,7 +93,10 @@ export const registerService = async (email: string, password: string, ruc: stri
         data: {
             userId: newUser.id,
             ruc,
-            companyName
+            companyName,
+            taxStatus: taxStatus as 'HABIDO' | 'NO_HABIDO' | 'NO_HALLADO',
+            fiscalAddress,
+            fiscalStatus
         }
     });
 
@@ -377,6 +381,72 @@ export const loginService = async (email: string, password: string, auditMeta: A
         throw new AppError(401, 'Contraseña incorrecta', 'INVALID_PASSWORD');
     }
 
+    const profile: {
+        name: string | null;
+        ruc: string | null;
+    } = {
+        name: null,
+        ruc: null,
+    };
+
+    if(foundCompany.role === 'COMPANY') {
+        let find = await prisma.companyProfile.findUnique({
+            where: {
+                userId: foundCompany.id
+            }
+        });
+
+        if (!find) {
+            throw new AppError(404, 'Perfil de empresa no encontrado', 'COMPANY_PROFILE_NOT_FOUND');
+        }
+
+        profile.name = find?.companyName;
+        profile.ruc = find?.ruc;
+
+    } else if(foundCompany.role === 'ADMIN') {
+        let find = await prisma.adminProfile.findUnique({
+            where: {
+                userId: foundCompany.id
+            }
+        });
+
+        if (!find) {
+            throw new AppError(404, 'Perfil de administrador no encontrado', 'ADMIN_PROFILE_NOT_FOUND');
+        }
+
+        profile.name = find?.firstName + ' ' + find?.lastName;
+        profile.ruc = null;
+    } else if(foundCompany.role === 'MUNICIPAL_ADMIN') {
+        let find = await prisma.localAdminProfile.findUnique({
+            where: {
+                userId: foundCompany.id
+            }
+        });
+
+        if (!find) {
+            throw new AppError(404, 'Perfil de administrador local no encontrado', 'LOCAL_ADMIN_PROFILE_NOT_FOUND');
+        }
+
+        profile.name = `${find.firstName} ${find.lastName}`;
+        profile.ruc = null;
+
+    } else if(foundCompany.role === 'MUNICIPAL_EVALUATOR') {
+        let find = await prisma.localEvaluator.findUnique({
+            where: {
+                userId: foundCompany.id
+            }
+        });
+
+        if (!find) {
+            throw new AppError(404, 'Perfil de evaluador local no encontrado', 'LOCAL_EVALUATOR_PROFILE_NOT_FOUND');
+        }
+
+        profile.name = `${find.firstName} ${find.lastName}`;
+        profile.ruc = null;
+    } else {
+        throw new AppError(500, 'Rol de usuario no reconocido', 'UNRECOGNIZED_USER_ROLE');
+    }
+
     const { refreshToken, hashed } = generateRefreshToken();
 
     const session = await prisma.session.create({
@@ -419,7 +489,11 @@ export const loginService = async (email: string, password: string, auditMeta: A
         refreshToken: refreshTokenJwt,
         message: "Inicio de sesión exitoso",
         code: "LOGIN_COMPLETED",
-        role: foundCompany.role
+        role: foundCompany.role,
+        data: {
+            name: profile.name || null,
+            ruc: profile.ruc || null,
+        }
     };
 
 }
