@@ -78,11 +78,12 @@ export const getMunicipalityByIdService = async (id: string, userRole: string) =
   };
 };
 
-export const createMunicipalityService = async (name: string, userRole: string) => {
+export const createMunicipalityService = async (name: string, location: string, userRole: string) => {
   if (userRole !== 'ADMIN') {
     throw new AppError(403, 'Usuario no autorizado', 'USER_NOT_AUTHORIZED');
   }
   const normalizedName = name.trim();
+  const normalizedLocation = location.trim();
   const existingMunicipality = await prisma.municipality.findFirst({
     where: {
       name: {
@@ -96,11 +97,13 @@ export const createMunicipalityService = async (name: string, userRole: string) 
   }
   const municipality = await prisma.municipality.create({
     data: {
-      name: normalizedName
+      name: normalizedName,
+      location: normalizedLocation
     },
     select: {
       id: true,
       name: true,
+      location: true,
       createdAt: true,
       updatedAt: true
     }

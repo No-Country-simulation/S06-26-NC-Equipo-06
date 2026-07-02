@@ -5,7 +5,8 @@ export const municipalityParamsSchema = z.object({
 });
 
 export const createMunicipalitySchema = z.object({
-  name: z.string().trim().min(2,'Municipality name must be at least 2 characters long')
+  name: z.string().trim().min(2,'Municipality name must be at least 2 characters long'),
+  location: z.string().trim().min(2,'Municipality location must be at least 2 characters long')
 });
 
 export const updateMunicipalitySchema = createMunicipalitySchema.partial().refine(

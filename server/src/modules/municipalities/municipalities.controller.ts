@@ -37,8 +37,8 @@ export const getMunicipalityByIdController = async (req: Request, res: Response,
 export const createMunicipalityController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = (req as any).user;
-    const { name } = createMunicipalitySchema.parse(req.body);
-    const response = await MunicipalityServices.createMunicipalityService(name,user.role);
+    const { name, location } = createMunicipalitySchema.parse(req.body);
+    const response = await MunicipalityServices.createMunicipalityService(name, location, user.role);
 
     res.status(201).json({
       success: true,
