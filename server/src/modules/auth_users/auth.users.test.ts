@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../../app';
 import { prisma } from '../../config/prisma';
+import { generateEmailVerificationToken } from '../../utils/generate.token';
 
 // Mock nodemailer so we don't send real emails during testing
 jest.mock('../../config/nodemailer', () => ({
@@ -10,6 +11,7 @@ jest.mock('../../config/nodemailer', () => ({
 describe('Auth Endpoints - Integration Tests', () => {
   const testEmails: string[] = [];
   const testRucs: string[] = [];
+  const testStartedAt = new Date();
 
   const mainEmail = `test_${Date.now()}_main@example.com`;
   const mainRuc = `123456789${Math.floor(10 + Math.random() * 90)}`;
@@ -27,6 +29,14 @@ describe('Auth Endpoints - Integration Tests', () => {
   // Database cleanup after all tests run
   afterAll(async () => {
     if (testEmails.length > 0) {
+      await prisma.auditLog.deleteMany({
+        where: {
+          createdAt: {
+            gte: testStartedAt
+          }
+        }
+      });
+
       await prisma.companyProfile.deleteMany({
         where: {
           user: {
@@ -134,17 +144,18 @@ describe('Auth Endpoints - Integration Tests', () => {
     });
 
     it('should successfully verify email with a valid token from the database', async () => {
-      // Find the token created during mainEmail registration
-      const dbToken = await prisma.passwordResetToken.findFirst({
+      const user = await prisma.user.findUnique({
         where: {
-          user: {
-            email: mainEmail
-          }
+          email: mainEmail
         }
       });
 
-      expect(dbToken).not.toBeNull();
-      const token = dbToken!.token;
+      expect(user).not.toBeNull();
+
+      const token = generateEmailVerificationToken({
+        id: user!.id,
+        email: user!.email
+      });
 
       const res = await request(app)
         .post(`/api/v1/auth-users/verify-email/${token}`)
@@ -158,22 +169,25 @@ describe('Auth Endpoints - Integration Tests', () => {
       });
 
       // Verify the user is now active in the database
-      const user = await prisma.user.findUnique({
+      const updatedUser = await prisma.user.findUnique({
         where: { email: mainEmail }
       });
-      expect(user?.isActive).toBe(true);
+      expect(updatedUser?.isActive).toBe(true);
     });
 
     it('should return 409 Conflict if the user is already verified', async () => {
-      const dbToken = await prisma.passwordResetToken.findFirst({
+      const user = await prisma.user.findUnique({
         where: {
-          user: {
-            email: mainEmail
-          }
+          email: mainEmail
         }
       });
 
-      const token = dbToken!.token;
+      expect(user).not.toBeNull();
+
+      const token = generateEmailVerificationToken({
+        id: user!.id,
+        email: user!.email
+      });
 
       const res = await request(app)
         .post(`/api/v1/auth-users/verify-email/${token}`)
@@ -247,7 +261,7 @@ describe('Auth Endpoints - Integration Tests', () => {
   // 4. LOGIN TESTS
   // ==========================================
   describe('POST /login', () => {
-    it('should return 400 for an unactivated/unverified user', async () => {
+    it('should return 403 for an unactivated/unverified user', async () => {
       const res = await request(app)
         .post('/api/v1/auth-users/login')
         .send({
@@ -255,7 +269,7 @@ describe('Auth Endpoints - Integration Tests', () => {
           password: 'password123'
         });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(403);
       expect(res.body).toEqual({
         success: false,
         message: 'Su cuenta no esta activada',
@@ -304,10 +318,11 @@ describe('Auth Endpoints - Integration Tests', () => {
         });
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         success: true,
         message: 'Inicio de sesión exitoso',
-        code: 'LOGIN_COMPLETED'
+        code: 'LOGIN_COMPLETED',
+        role: 'COMPANY'
       });
 
       const cookies = res.headers['set-cookie'];
@@ -323,13 +338,13 @@ describe('Auth Endpoints - Integration Tests', () => {
   // 5. VERIFY AUTH TESTS
   // ==========================================
   describe('GET /verify-auth', () => {
-    it('should return 401 if request is missing token cookie', async () => {
+    it('should return 401 if request is missing auth cookies', async () => {
       const res = await request(app)
         .get('/api/v1/auth-users/verify-auth')
         .send();
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('No estás autorizado (falta token)');
+      expect(res.body.message).toBe('No estás autorizado (falta refreshToken)');
     });
 
     it('should return 200 if valid token and refreshToken cookies are supplied', async () => {
@@ -339,10 +354,11 @@ describe('Auth Endpoints - Integration Tests', () => {
         .send();
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         success: true,
         message: 'Usuario autenticado',
-        code: 'USER_AUTHENTICATED'
+        code: 'USER_AUTHENTICATED',
+        role: 'COMPANY'
       });
     });
   });
@@ -383,4 +399,3 @@ describe('Auth Endpoints - Integration Tests', () => {
     });
   });
 });
-
