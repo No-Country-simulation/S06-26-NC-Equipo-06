@@ -15,8 +15,35 @@ enum Role {
 }
 
 enum TaxStatus {
-  ACTIVO
   HABIDO
+  NO_HABIDO
+  NO_HALLADO
+}
+
+enum Schedule {
+  CALL_FOR_APPLICATIONS
+  PARTICIPANT_REGISTRATION
+  SUBMISSION_OF_PROPOSALS
+  AWARD_OF_TENDER
+}
+
+enum DocumentTypes {
+  TXT
+  DOC
+  DOCX
+  PDF
+  RTF
+  ODT
+  MD
+}
+
+enum StatusTender {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  CLOSED
+  ARCHIVED
 }
 
 model User {
@@ -46,6 +73,7 @@ model CompanyProfile {
   companyName String?
   taxStatus   TaxStatus?
   fiscalAddress String?
+  fiscalStatus Boolean
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -91,6 +119,7 @@ model LocalEvaluator {
 
   user         User @relation(fields: [userId], references: [id])
   municipality Municipality @relation(fields: [municipalityId], references: [id])
+  tenders      Tenders[]
 }
 
 model Session {
@@ -122,6 +151,7 @@ model PasswordResetToken {
 model Municipality {
   id            String   @id @default(uuid()) @db.Uuid
   name          String
+  detail        String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -143,4 +173,68 @@ model UserInvitation {
   user      User @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model Tenders {
+  id              String   @id @default(uuid()) @db.Uuid
+  idCreator       String   @db.Uuid
+  status          StatusTender
+  title           String
+  ubication       String
+  coorX           Float
+  coorY           Float
+  description     String
+  executionPeriod String
+  contact         String
+  municipality    String
+  createdAt       DateTime  @default(now())
+
+  tenderSchedule  TenderSchedule[]
+  documentsTender DocumentsTender[]
+  statusLogs      StatusLogs[]
+  requirements    Requirements[]
+
+  localEvaluator  LocalEvaluator @relation(fields: [idCreator], references: [id])
+}
+
+model TenderSchedule {
+  id                String   @id @default(uuid()) @db.Uuid
+  idTender          String   @db.Uuid
+  schedule          Schedule
+  scheduleTimeLine  String
+  createdAt         DateTime @default(now())
+  
+  tenders           Tenders @relation(fields: [idTender], references: [id])
+}
+
+model DocumentsTender{
+  id              String   @id @default(uuid()) @db.Uuid
+  idTender        String   @db.Uuid
+  documentType    DocumentTypes
+  fileName        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenders         Tenders @relation(fields: [idTender], references: [id])
+}
+
+model StatusLogs {
+  id        String   @id @default(uuid()) @db.Uuid
+  idTender  String   @db.Uuid
+  action    StatusTender
+  message   String
+  createdAt DateTime @default(now())
+
+  tenders   Tenders @relation(fields: [idTender], references: [id])
+}
+
+model Requirements {
+  id               String   @id @default(uuid()) @db.Uuid
+  idTender         String   @db.Uuid
+  requirement      String
+  validationSchema Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tenders     Tenders @relation(fields: [idTender], references: [id])
 }

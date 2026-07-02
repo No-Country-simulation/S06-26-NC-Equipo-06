@@ -17,9 +17,9 @@ import {
 
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email, password, ruc, companyName } = registerSchema.parse(req.body);
+        const { email, password, ruc, companyName, taxStatus, fiscalAddress, fiscalStatus } = registerSchema.parse(req.body);
 
-        const responseService = await AuthServices.registerService(email, password, ruc, companyName);
+        const responseService = await AuthServices.registerService(email, password, ruc, companyName, taxStatus, fiscalAddress, fiscalStatus);
 
         res.status(201).json({
             success: true,
@@ -90,7 +90,11 @@ export const loginController = async (req: Request, res: Response, next: NextFun
             success: true,
             message: responseService.message,
             code: responseService.code,
-            role: responseService.role
+            role: responseService.role,
+            data: {
+                name: responseService.data.name,
+                ruc: responseService.data.ruc
+            }
         });
 
     } catch (error) {
