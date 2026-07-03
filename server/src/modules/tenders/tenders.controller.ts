@@ -100,3 +100,23 @@ export const addTenderFileController = async (req: Request, res: Response, next:
         next(error);
     }
 }
+
+export const deleteTenderController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const user = (req as any).user;
+
+        const { id } = idSchema.parse(req.params);
+
+        const response = await tenderServices.deleteTenderService(user.userId, id);
+
+        res.status(201).json({
+            success: true,
+            message: response.message,
+            code: response.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}

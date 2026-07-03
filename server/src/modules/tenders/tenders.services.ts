@@ -348,3 +348,48 @@ export const addTenderFileService = async (idTender: string, userId: string, fil
         code: "FILE_ADDED"
     }
 }
+
+export const deleteTenderService = async (userId: string, idTender: string) => {
+    const findUser = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    })
+
+    if (!findUser) {
+        throw new AppError(404, "Usuario no encontrado", 'USER_NOT_FOUND');
+    }
+
+    if (findUser.role !== "MUNICIPAL_EVALUATOR") {
+        throw new AppError(403, "Usuario no autorizado", 'USER_NOT_AUTHORIZED');
+    }
+
+    if (!findUser.isActive) {
+        throw new AppError(409, "Cuenta inactiva", 'ACCOUNT_NOT_ACTIVE');
+    }
+
+    const findTender = await prisma.tenders.findUnique({
+        where: {
+            id: idTender,
+            idCreator: userId
+        }
+    });
+
+    if (!findTender) {
+        throw new AppError(404, "Licitación no encontrada", 'TENDER_NOT_FOUND');
+    }
+
+    await prisma.tenders.update({
+        where: {
+            id: idTender
+        },
+        data: {
+            status: 'ARCHIVED'
+        }
+    });
+
+    return {
+        message: "Licitación archivada exitosamente",
+        code: "TENDER_ARCHIVED"
+    }
+}

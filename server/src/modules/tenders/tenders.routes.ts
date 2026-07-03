@@ -14,4 +14,6 @@ router.delete('/delete-file-tender/:id', refreshToken, tokenMiddleware, authoriz
 
 router.post('/add-file-tender/:id', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.single('documents'), tendersController.addTenderFileController);
 
+router.patch('/delete-tender/:id', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), tendersController.deleteTenderController);
+
 export default router;
