@@ -1,7 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { AppError } from '../../utils/app.error';
 import { moveFilesToTenderFolder } from "../../utils/multer.helper";
-import { fileTypeFromFile } from "file-type";
+import { fromFile } from "file-type";
 
 export const createTenderService = async (data: any, userId: string, files: Express.Multer.File[] = []) => {
 
@@ -73,7 +73,7 @@ export const createTenderService = async (data: any, userId: string, files: Expr
                 description: data.description,
                 executionPeriod: data.executionPeriod,
                 contact: data.contact,
-                municipality: `${findMunicipality.name} - ${findMunicipality.detail}`
+                municipality: `${findMunicipality.name} - ${findMunicipality.location}`
             }
         })
 
@@ -92,7 +92,7 @@ export const createTenderService = async (data: any, userId: string, files: Expr
         }
 
         await Promise.all(documentsTender.map(async (document: any) => {
-            const realType = await fileTypeFromFile(document.matchingFile.path).catch(() => null);
+            const realType = await fromFile(document.matchingFile.path).catch(() => null);
 
             await prisma.documentsTender.create({
                 data: {
