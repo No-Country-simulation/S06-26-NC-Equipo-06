@@ -26,7 +26,7 @@ app.use(limiter)
 
 app.use(cors(
     {
-        origin: process.env.TEST_FRONT,
+        origin: process.env.FRONTEND_URL,
         credentials: true,
     }
 ));
