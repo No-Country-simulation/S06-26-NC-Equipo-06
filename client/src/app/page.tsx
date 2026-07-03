@@ -110,21 +110,21 @@ export default function Home() {
         <section className="bg-primary py-10 px-6">
           <ul className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center text-white max-w-7xl md:mx-auto">
             <li className="max-w-50 md:max-w-55  mx-auto space-y-2">
-              <p className="text-4xl font-bold md:font-black md:text-[56px]">45%</p>
+              <p className="text-4xl font-bold md:font-black md:text-[56px] text-white">45%</p>
               <p className="text-white font-medium">
                 de postores descalificados por errores formales
                 manuales.
               </p>
             </li>
             <li className="max-w-50 md:max-w-55 mx-auto space-y-2">
-              <p className="text-4xl font-bold md:font-black md:text-[56px]">15 Días</p>
+              <p className="text-4xl font-bold md:font-black md:text-[56px] text-white">15 Días</p>
               <p className="text-white font-medium">
                 reducidos a minutos para
                 revisión de expedientes.
               </p>
             </li>
             <li className="max-w-50 md:max-w-55 mx-auto space-y-2">
-              <p className="text-4xl font-bold md:font-black md:text-[56px]">S/. 0</p>
+              <p className="text-4xl font-bold md:font-black md:text-[56px] text-white">S/. 0</p>
               <p className="text-white font-medium">
                 pérdidas estimadas por
                 procesos declarados

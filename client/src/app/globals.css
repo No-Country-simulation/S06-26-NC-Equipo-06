@@ -5,15 +5,13 @@
   --foreground: #171717;
 }
 
-h1 {
-  @apply text-[28px] text-text-2 font-semibold;
-}
-
-p {
-  @apply text-text-1;
-}
-
 @layer base {
+  h1 {
+    @apply text-[28px] text-text-2 font-semibold;
+  }
+  p {
+    @apply text-text-1;
+  }
   button {
     cursor: pointer;
   }
