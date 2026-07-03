@@ -16,7 +16,7 @@ const CompanyRegisterPage = () => {
     const router = useRouter();
     const [successMessage, setSuccessMessage] = useState<string>("");
     const [step, setStep] = useState<number>(1);
-    const [formData, setFormData] = useState({});
+    const [formData, setFormData] = useState<Partial<StepOneFields>>({});
     const [error, setError] = useState<string | null>(null);
 
     const handleStepOneSubmit = (stepOneData: StepOneFields) => {
@@ -26,7 +26,7 @@ const CompanyRegisterPage = () => {
 
     const handleStepTwoSubmit = async (stepTwoData: StepTwoFields) => {
         setError(null);
-        const { repeatPassword, ...restFormData } = formData as any;
+        const { repeatPassword: _repeatPassword, ...restFormData } = formData;
         const finalValues = {
             ...restFormData,
             ...stepTwoData

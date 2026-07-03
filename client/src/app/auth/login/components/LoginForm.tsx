@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useFormik } from "formik";
 import { loginSchema, LoginFields } from "../login.schema";
 import useAuth from "@/hooks/useAuth";
