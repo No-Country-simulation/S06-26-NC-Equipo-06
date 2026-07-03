@@ -40,9 +40,55 @@ export const updateTenderController = async (req: Request, res: Response, next: 
 
         const data = updateTenderSchema.parse(req.body);
 
-        const { idTender } = idSchema.parse(req.params);
+        const { id } = idSchema.parse(req.params);
 
-        const response = await tenderServices.updateTenderService(data, user.userId, idTender);
+        const response = await tenderServices.updateTenderService(data, user.userId, id);
+
+        res.status(201).json({
+            success: true,
+            message: response.message,
+            code: response.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const deleteTenderFileController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const user = (req as any).user;
+
+        const { id } = idSchema.parse(req.params);
+
+        const response = await tenderServices.deleteTenderFileService(user.userId, id);
+
+        res.status(201).json({
+            success: true,
+            message: response.message,
+            code: response.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const addTenderFileController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const user = (req as any).user;
+
+        const { id } = idSchema.parse(req.params);
+
+        const file = (req.file as Express.Multer.File);
+
+        if (!file) {
+            throw new AppError(400, "No se ha subido ningun archivo", 'NO_FILE_UPLOADED');
+        }
+
+        const response = await tenderServices.addTenderFileService(id, user.userId, file);
 
         res.status(201).json({
             success: true,

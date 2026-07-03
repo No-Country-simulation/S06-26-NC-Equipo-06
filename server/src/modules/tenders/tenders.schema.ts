@@ -62,5 +62,5 @@ export const updateTenderSchema = z.object({
 });
 
 export const idSchema = z.object({
-    idTender: z.string().uuid().min(1, "El id de la licitación es invalido.")
+    id: z.string().uuid().min(1, "El id de la licitación es invalido.")
 });

@@ -32,3 +32,39 @@ export const moveFilesToTenderFolder = (
 
     return newPaths;
 };
+
+export const deleteFiles = (filePaths: string[]): void => {
+    for (const filePath of filePaths) {
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        } catch (error) {
+            console.error(`Error al eliminar el archivo ${filePath}:`, error);
+        }
+    }
+};
+
+export const deleteTenderFolder = (tenderName: string): void => {
+    const folderName = sanitizeFolderName(tenderName);
+    const destDir = path.join(BASE_UPLOAD_DIR, folderName);
+    try {
+        if (fs.existsSync(destDir)) {
+            fs.rmSync(destDir, { recursive: true, force: true });
+        }
+    } catch (error) {
+        console.error(`Error al eliminar la carpeta de la licitación ${tenderName}:`, error);
+    }
+};
+
+export const deleteTenderFile = (tenderName: string, fileName: string): void => {
+    const folderName = sanitizeFolderName(tenderName);
+    const filePath = path.join(BASE_UPLOAD_DIR, folderName, fileName);
+    try {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    } catch (error) {
+        console.error(`Error al eliminar el archivo ${filePath}:`, error);
+    }
+};

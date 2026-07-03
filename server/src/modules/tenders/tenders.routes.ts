@@ -8,6 +8,10 @@ const router = express.Router();
 
 router.post('/create-tender', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.fields([{ name: 'documents', maxCount: 10 }]), tendersController.createTenderController);
 
-router.put('/update-tender/:idTender', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.fields([{ name: 'documents', maxCount: 10 }]), tendersController.updateTenderController);
+router.put('/update-tender/:id', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.fields([{ name: 'documents', maxCount: 10 }]), tendersController.updateTenderController);
+
+router.delete('/delete-file-tender/:id', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), tendersController.deleteTenderFileController);
+
+router.post('/add-file-tender/:id', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.single('documents'), tendersController.addTenderFileController);
 
 export default router;

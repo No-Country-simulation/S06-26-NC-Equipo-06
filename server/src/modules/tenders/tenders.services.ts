@@ -1,7 +1,8 @@
 import { prisma } from "../../config/prisma";
 import { AppError } from '../../utils/app.error';
-import { moveFilesToTenderFolder } from "../../utils/multer.helper";
+import { moveFilesToTenderFolder, deleteTenderFile } from "../../utils/multer.helper";
 import { fromFile } from "file-type";
+import { DocumentTypes } from "@prisma/client";
 
 export const createTenderService = async (data: any, userId: string, files: Express.Multer.File[] = []) => {
 
@@ -210,5 +211,140 @@ export const updateTenderService = async (data: any, userId: string, idTender: s
     return {
         message: "Licitación actualizada exitosamente",
         code: "TENDER_UPDATED"
+    }
+}
+
+export const deleteTenderFileService = async (userId: string, idFile: string) => {
+    const findUser = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    })
+
+    if (!findUser) {
+        throw new AppError(404, "Usuario no encontrado", 'USER_NOT_FOUND');
+    }
+
+    if (findUser.role !== "MUNICIPAL_EVALUATOR") {
+        throw new AppError(403, "Usuario no autorizado", 'USER_NOT_AUTHORIZED');
+    }
+
+    if (!findUser.isActive) {
+        throw new AppError(409, "Cuenta inactiva", 'ACCOUNT_NOT_ACTIVE');
+    }
+
+    const findFile = await prisma.documentsTender.findUnique({
+        where: {
+            id: idFile
+        }
+    })
+
+    if (!findFile) {
+        throw new AppError(404, "Archivo no encontrado", 'FILE_NOT_FOUND');
+    }
+
+    const findTender = await prisma.tenders.findUnique({
+        where: {
+            id: findFile.idTender,
+            OR: [
+                { status: 'DRAFT' },
+                { status: 'REJECTED' }
+            ]
+        }
+    })
+
+    if (!findTender) {
+        throw new AppError(404, "Licitación no encontrada", 'TENDER_NOT_FOUND');
+    }
+
+    if (findTender.idCreator !== userId) {
+        throw new AppError(403, "Usuario no autorizado", 'USER_NOT_AUTHORIZED');
+    }
+
+    try {
+        if (findFile.fileName) {
+            deleteTenderFile(findTender.title, findFile.fileName);
+        }
+
+        await prisma.documentsTender.delete({
+            where: {
+                id: idFile
+            }
+        });
+    } catch (error: any) {
+        throw new AppError(500, "Error al eliminar el archivo, " + error.message, "ERROR_DELETING_FILE");
+    }
+
+    return {
+        message: "Archivo eliminado exitosamente",
+        code: "FILE_DELETED"
+    }
+}
+
+export const addTenderFileService = async (idTender: string, userId: string, file: Express.Multer.File) => {
+    const findUser = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    })
+
+    if (!findUser) {
+        throw new AppError(404, "Usuario no encontrado", 'USER_NOT_FOUND');
+    }
+
+    if (findUser.role !== "MUNICIPAL_EVALUATOR") {
+        throw new AppError(403, "Usuario no autorizado", 'USER_NOT_AUTHORIZED');
+    }
+
+    if (!findUser.isActive) {
+        throw new AppError(409, "Cuenta inactiva", 'ACCOUNT_NOT_ACTIVE');
+    }
+
+    const findTender = await prisma.tenders.findUnique({
+        where: {
+            id: idTender,
+            OR: [
+                { status: 'DRAFT' },
+                { status: 'REJECTED' }
+            ]
+        }
+    })
+
+    if (!findTender) {
+        throw new AppError(404, "Licitación no encontrada", 'TENDER_NOT_FOUND');
+    }
+
+    if (findTender.idCreator !== userId) {
+        throw new AppError(403, "Usuario no autorizado", 'USER_NOT_AUTHORIZED');
+    }
+
+    try {
+
+        if (file) {
+            moveFilesToTenderFolder([file], findTender.title);
+        }
+
+        const realType = await fromFile(file.path).catch(() => null);
+
+        if (!realType) {
+            throw new AppError(400, "Tipo de archivo no reconocido", 'FILE_TYPE_NOT_RECOGNIZED');
+        }
+
+        const fileType = realType.mime;
+
+        await prisma.documentsTender.create({
+            data: {
+                idTender: idTender,
+                documentType: fileType as DocumentTypes,
+                fileName: file.originalname
+            }
+        });
+    } catch (error: any) {
+        throw new AppError(500, "Error al agregar el archivo, " + error.message, "ERROR_ADDING_FILE");
+    }
+
+    return {
+        message: "Archivo agregado exitosamente",
+        code: "FILE_ADDED"
     }
 }
