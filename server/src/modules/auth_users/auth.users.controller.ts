@@ -24,8 +24,7 @@ export const registerController = async (req: Request, res: Response, next: Next
     try {
         const { email, password, ruc, companyName, taxStatus, fiscalAddress, fiscalStatus } = registerSchema.parse(req.body);
 
-        const responseService = await AuthServices.registerService(email, password, ruc, companyName, getAuditMeta(req));
-        const responseService = await AuthServices.registerService(email, password, ruc, companyName, taxStatus, fiscalAddress, fiscalStatus);
+        const responseService = await AuthServices.registerService(email, password, ruc, companyName, taxStatus, fiscalAddress, fiscalStatus, getAuditMeta(req));
 
         res.status(201).json({
             success: true,

@@ -22,8 +22,7 @@ type AuditActorContext = {
     actorRole?: Role | null;
 };
 
-export const registerService = async (email: string, password: string, ruc: string, companyName: string, auditMeta: AuditRequestMeta = {}) => {
-export const registerService = async (email: string, password: string, ruc: string, companyName: string, taxStatus: string, fiscalAddress: string, fiscalStatus: boolean) => {
+export const registerService = async (email: string, password: string, ruc: string, companyName: string, taxStatus: string, fiscalAddress: string, fiscalStatus: boolean, auditMeta: AuditRequestMeta = {}) => {
 
     const findCompany = await prisma.user.findUnique({
         where: {
@@ -389,7 +388,7 @@ export const loginService = async (email: string, password: string, auditMeta: A
         ruc: null,
     };
 
-    if(foundCompany.role === 'COMPANY') {
+    if (foundCompany.role === 'COMPANY') {
         let find = await prisma.companyProfile.findUnique({
             where: {
                 userId: foundCompany.id
@@ -403,7 +402,7 @@ export const loginService = async (email: string, password: string, auditMeta: A
         profile.name = find?.companyName;
         profile.ruc = find?.ruc;
 
-    } else if(foundCompany.role === 'ADMIN') {
+    } else if (foundCompany.role === 'ADMIN') {
         let find = await prisma.adminProfile.findUnique({
             where: {
                 userId: foundCompany.id
@@ -416,7 +415,7 @@ export const loginService = async (email: string, password: string, auditMeta: A
 
         profile.name = find?.firstName + ' ' + find?.lastName;
         profile.ruc = null;
-    } else if(foundCompany.role === 'MUNICIPAL_ADMIN') {
+    } else if (foundCompany.role === 'MUNICIPAL_ADMIN') {
         let find = await prisma.localAdminProfile.findUnique({
             where: {
                 userId: foundCompany.id
@@ -430,7 +429,7 @@ export const loginService = async (email: string, password: string, auditMeta: A
         profile.name = `${find.firstName} ${find.lastName}`;
         profile.ruc = null;
 
-    } else if(foundCompany.role === 'MUNICIPAL_EVALUATOR') {
+    } else if (foundCompany.role === 'MUNICIPAL_EVALUATOR') {
         let find = await prisma.localEvaluator.findUnique({
             where: {
                 userId: foundCompany.id
