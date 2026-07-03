@@ -126,6 +126,9 @@ describe("CompanyRegisterPage", () => {
                 ruc: "20123456789",
                 email: "admin@miempresa.com",
                 password: "password123",
+                taxStatus: "HABIDO",
+                fiscalAddress: "Av. Corrientes 1234, 5° \"A\", CABA (Argentina)",
+                fiscalStatus: true,
             });
         });
 

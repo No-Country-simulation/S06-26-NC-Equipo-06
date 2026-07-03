@@ -5,10 +5,10 @@ import { useFormik } from "formik";
 import { loginSchema, LoginFields } from "../login.schema";
 import useAuth from "@/hooks/useAuth";
 import Link from "next/link";
+import InputPassword from "@/components/input-password";
 
 const LoginForm = () => {
     const { login } = useAuth();
-    const [showPassword, setShowPassword] = useState(false);
 
     const formik = useFormik<LoginFields>({
         initialValues: {
@@ -65,36 +65,17 @@ const LoginForm = () => {
                 ) : null}
             </div>
             <div className="mb-1">
-                <label htmlFor="password" className="font-medium text-text-2 block mb-2">Contraseña</label>
-                <div className={`flex items-center gap-3 w-full rounded-xl py-4.5 px-4 border ${formik.touched.password && formik.errors.password
-                    ? "border-error"
-                    : "border-grey-2"
-                    }`}>
-                    <img src="/Icon/pass.svg" alt="Lock icon" className="h-6 w-auto" />
-                    <input
-                        type={showPassword ? "text" : "password"}
-                        id="password"
-                        name="password"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.password}
-                        className="w-full bg-transparent outline-none border-none text-text-2"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="focus:outline-none flex items-center"
-                    >
-                        <img
-                            src={showPassword ? "/Icon/eye-slash.svg" : "/Icon/eye.svg"}
-                            alt="Toggle password visibility"
-                            className="h-6 w-auto"
-                        />
-                    </button>
-                </div>
-                {formik.touched.password && formik.errors.password ? (
-                    <p className="text-error mt-1">{formik.errors.password}</p>
-                ) : null}
+                <InputPassword
+                    label="Contraseña"
+                    id="password"
+                    name="password"
+                    icon="/Icon/pass.svg"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.password}
+                    error={formik.errors.password}
+                    touched={formik.touched.password}
+                />
             </div>
             <div className="flex gap-1 justify-end mb-5">
                 <Link href="/auth/reset-password" className="text-primary font-medium text-sm">Olvidé mi contraseña</Link>

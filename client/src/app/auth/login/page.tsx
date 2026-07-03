@@ -7,6 +7,7 @@ import { redirectPerRole } from "@/context/AuthContext";
 import LoginForm from "./components/LoginForm";
 import Footer from "@/components/footer";
 import Link from "next/link";
+import HeaderAuth from "@/components/header-auth";
 
 const Login = () => {
     const { role, isLoading } = useAuth();
@@ -28,10 +29,7 @@ const Login = () => {
 
     return (
         <>
-            <header className="relative z-10 flex gap-2 items-center w-full justify-center py-4.5 bg-background-2 shadow-custom">
-                <img className="h-6 w-auto" src="/logo.svg" alt="Logo Lictia" />
-                <p className="text-2xl font-bold text-primary">Lictia</p>
-            </header>
+            <HeaderAuth />
             <main className="bg-background-2 py-16">
                 <LoginForm />
                 <div className="flex gap-1 justify-center">
