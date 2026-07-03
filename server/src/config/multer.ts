@@ -1,23 +1,24 @@
-// multer.ts
 import multer, { FileFilterCallback } from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import { Request } from "express";
 
-const TEMP_UPLOAD_DIR = path.join(__dirname, "..", "uploads", "tmp");
+const TEMP_UPLOAD_DIR = process.env.VERCEL
+    ? path.join(os.tmpdir(), "uploads")
+    : path.join(process.cwd(), "uploads", "tmp");
 
-if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
-    fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
-}
+fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
-    destination: (_req: Request, _file: Express.Multer.File, cb) => {
+    destination: (_req, _file, cb) => {
         cb(null, TEMP_UPLOAD_DIR);
     },
-    filename: (_req: Request, file: Express.Multer.File, cb) => {
-        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        const ext = path.extname(file.originalname);
-        cb(null, `${uniqueSuffix}${ext}`);
+    filename: (_req, file, cb) => {
+        const uniqueSuffix = `${Date.now()}-${Math.round(
+            Math.random() * 1e9
+        )}`;
+        cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
     },
 });
 
@@ -35,18 +36,19 @@ const fileFilter = (
     cb: FileFilterCallback
 ) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    const isMimeValid = ALLOWED_MIME_TYPES.includes(file.mimetype);
-    const isExtValid = ALLOWED_EXTENSIONS.includes(ext);
 
-    if (isMimeValid && isExtValid) {
+    if (
+        ALLOWED_MIME_TYPES.includes(file.mimetype) &&
+        ALLOWED_EXTENSIONS.includes(ext)
+    ) {
         cb(null, true);
     } else {
-        cb(new Error("Solo se permiten archivos PDF, DOC o DOCX"));
+        cb(new Error("Solo se permiten archivos PDF, DOC o DOCX."));
     }
 };
 
 const limits = {
-    fileSize: 10 * 1024 * 1024, // 10 MB
+    fileSize: 10 * 1024 * 1024,
 };
 
 export const upload = multer({
