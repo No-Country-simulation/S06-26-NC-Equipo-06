@@ -20,6 +20,12 @@ vi.mock("@/services/auth.service", () => ({
         code: "COMPANY_REGISTRATION_COMPLETED",
         message: "Empresa registrada exitosamente",
     }),
+    verifyRucService: vi.fn().mockResolvedValue({
+        companyName: "CONSTRUCTORA DEL NORTE S.A.C.",
+        taxStatus: "HABIDO",
+        fiscalAddress: "Av. Javier Prado Este 1230, San Isidro, Lima - Perú",
+        fiscalStatus: true,
+    }),
 }));
 
 vi.mock("@/hooks/useAuth", () => ({
@@ -49,32 +55,30 @@ describe("CompanyRegisterPage", () => {
     it("renders the register form elements correctly", () => {
         renderRegister();
 
-        expect(screen.getByRole("heading", { name: /registrar empresa/i })).toBeInTheDocument();
-        expect(screen.getByLabelText(/nombre de la empresa/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/ruc/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /registrarse/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: /crear tu cuenta/i })).toBeInTheDocument();
+        expect(screen.getByLabelText(/correo electrónico institucional/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/^contraseña$/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/confirmar contraseña/i)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /continuar/i })).toBeInTheDocument();
     });
 
     it("shows validation error messages when submitting empty fields", async () => {
         renderRegister();
 
-        const submitButton = screen.getByRole("button", { name: /registrarse/i });
+        const submitButton = screen.getByRole("button", { name: /continuar/i });
         fireEvent.click(submitButton);
 
         await waitFor(() => {
-            expect(screen.getByText(/el nombre de la empresa es requerido/i)).toBeInTheDocument();
-            expect(screen.getByText(/el ruc es requerido/i)).toBeInTheDocument();
-            expect(screen.getByText(/el correo electrónico es requerido/i)).toBeInTheDocument();
-            expect(screen.getByText(/la contraseña es requerida/i)).toBeInTheDocument();
-        });
+            expect(screen.getByText(/^el correo electrónico es requerido$/i)).toBeInTheDocument();
+            expect(screen.getByText(/^la contraseña es requerida$/i)).toBeInTheDocument();
+            expect(screen.getByText(/^la confirmación de la contraseña es requerida$/i)).toBeInTheDocument();
+        }, { timeout: 3000 });
     });
 
     it("shows validation error for invalid email format", async () => {
         renderRegister();
 
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
+        const emailInput = screen.getByLabelText(/correo electrónico institucional/i);
         fireEvent.change(emailInput, { target: { value: "invalidemail" } });
         fireEvent.blur(emailInput);
 
@@ -86,7 +90,14 @@ describe("CompanyRegisterPage", () => {
     it("shows validation error for invalid RUC (not 11 digits)", async () => {
         renderRegister();
 
-        const rucInput = screen.getByLabelText(/ruc/i);
+        // 1. Fill Step 1 correctly
+        fireEvent.change(screen.getByLabelText(/correo electrónico institucional/i), { target: { value: "admin@miempresa.com" } });
+        fireEvent.change(screen.getByLabelText(/^contraseña$/i), { target: { value: "password123" } });
+        fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), { target: { value: "password123" } });
+        fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+
+        // 2. Wait for Step 2 to render and test RUC
+        const rucInput = await screen.findByLabelText(/ruc/i);
         
         // 9 digits
         fireEvent.change(rucInput, { target: { value: "123456789" } });
@@ -108,24 +119,35 @@ describe("CompanyRegisterPage", () => {
     it("submits the form successfully with valid values and shows success message", async () => {
         renderRegister();
 
-        const companyNameInput = screen.getByLabelText(/nombre de la empresa/i);
-        const rucInput = screen.getByLabelText(/ruc/i);
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
-        const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /registrarse/i });
+        // Step 1
+        fireEvent.change(screen.getByLabelText(/correo electrónico institucional/i), { target: { value: "admin@miempresa.com" } });
+        fireEvent.change(screen.getByLabelText(/^contraseña$/i), { target: { value: "password123" } });
+        fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), { target: { value: "password123" } });
+        fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
 
-        fireEvent.change(companyNameInput, { target: { value: "Mi Empresa S.A." } });
+        // Step 2
+        const rucInput = await screen.findByLabelText(/ruc/i);
+        const submitButton = screen.getByRole("button", { name: /continuar/i });
+
         fireEvent.change(rucInput, { target: { value: "20123456789" } });
-        fireEvent.change(emailInput, { target: { value: "admin@miempresa.com" } });
-        fireEvent.change(passwordInput, { target: { value: "password123" } });
+
+        // Esperar a que se autocompleten los valores
+        await waitFor(() => {
+            expect(screen.getByLabelText(/razón social/i)).toHaveValue("CONSTRUCTORA DEL NORTE S.A.C.");
+            expect(screen.getByLabelText(/dirección fiscal/i)).toHaveValue("Av. Javier Prado Este 1230, San Isidro, Lima - Perú");
+        });
+
         fireEvent.click(submitButton);
 
         await waitFor(() => {
             expect(registerCompanyService).toHaveBeenCalledWith({
-                companyName: "Mi Empresa S.A.",
-                ruc: "20123456789",
                 email: "admin@miempresa.com",
                 password: "password123",
+                ruc: "20123456789",
+                companyName: "CONSTRUCTORA DEL NORTE S.A.C.",
+                taxStatus: "HABIDO",
+                fiscalAddress: "Av. Javier Prado Este 1230, San Isidro, Lima - Perú",
+                fiscalStatus: true,
             });
         });
 
@@ -141,16 +163,23 @@ describe("CompanyRegisterPage", () => {
 
         renderRegister();
 
-        const companyNameInput = screen.getByLabelText(/nombre de la empresa/i);
-        const rucInput = screen.getByLabelText(/ruc/i);
-        const emailInput = screen.getByLabelText(/correo electrónico/i);
-        const passwordInput = screen.getByLabelText(/contraseña/i);
-        const submitButton = screen.getByRole("button", { name: /registrarse/i });
+        // Step 1
+        fireEvent.change(screen.getByLabelText(/correo electrónico institucional/i), { target: { value: "admin@miempresa.com" } });
+        fireEvent.change(screen.getByLabelText(/^contraseña$/i), { target: { value: "password123" } });
+        fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), { target: { value: "password123" } });
+        fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
 
-        fireEvent.change(companyNameInput, { target: { value: "Mi Empresa S.A." } });
+        // Step 2
+        const rucInput = await screen.findByLabelText(/ruc/i);
+        const submitButton = screen.getByRole("button", { name: /continuar/i });
+
         fireEvent.change(rucInput, { target: { value: "20123456789" } });
-        fireEvent.change(emailInput, { target: { value: "admin@miempresa.com" } });
-        fireEvent.change(passwordInput, { target: { value: "password123" } });
+
+        // Esperar a que se autocompleten los valores
+        await waitFor(() => {
+            expect(screen.getByLabelText(/razón social/i)).toHaveValue("CONSTRUCTORA DEL NORTE S.A.C.");
+        });
+
         fireEvent.click(submitButton);
 
         await waitFor(() => {

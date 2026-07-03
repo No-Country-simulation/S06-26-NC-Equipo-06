@@ -5,6 +5,14 @@
   --foreground: #171717;
 }
 
+h1 {
+  @apply text-[28px] text-text-2 font-semibold;
+}
+
+p {
+  @apply text-text-1;
+}
+
 @layer base {
   button {
     cursor: pointer;
@@ -12,6 +20,24 @@
 
   html {
     font-family: var(--font-sans);
+  }
+
+  input {
+    @apply w-full py-4.5 px-4 rounded-xl border-2 border-grey-2 bg-background;
+  }
+
+  /* Ocultar el botón de revelar contraseña por defecto de los navegadores */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+
+  .btn {
+    @apply py-4 px-6 rounded-xl font-semibold;
+  }
+
+  .btn-primary {
+    @apply text-white bg-primary;
   }
 }
 
@@ -29,6 +55,11 @@
   --color-grey-2: #d7dce3;
   --color-grey-1: #edeff3;
   --color-white: #ffffff;
+  --shadow-custom: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --color-error: #DC2626;
+  --color-success: #15803D;
+  --color-warning: #DB7628;
+  --color-info: #1e40af;
 }
 
 @theme inline {
@@ -43,3 +74,4 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+

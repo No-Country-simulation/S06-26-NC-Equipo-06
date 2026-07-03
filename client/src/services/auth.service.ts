@@ -170,3 +170,26 @@ export const verifyEmailService = async (token: string): Promise<AuthResponse> =
         throw new Error(errorMessage);
     }
 };
+
+export interface RucVerificationData {
+    companyName: string;
+    taxStatus: "HABIDO" | "NO_HABIDO" | "NO_HALLADO";
+    fiscalAddress: string;
+    fiscalStatus: boolean;
+}
+
+export const verifyRucService = async (ruc: string): Promise<RucVerificationData> => {
+    // Simular latencia de API
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    if (ruc.length !== 11) {
+        throw new Error("El RUC ingresado es inválido.");
+    }
+
+    return {
+        companyName: "CONSTRUCTORA DEL NORTE S.A.C.",
+        taxStatus: "HABIDO",
+        fiscalAddress: "Av. Javier Prado Este 1230, San Isidro, Lima - Perú",
+        fiscalStatus: true,
+    };
+};

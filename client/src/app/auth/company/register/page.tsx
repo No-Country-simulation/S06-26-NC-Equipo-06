@@ -1,53 +1,64 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
-import { registerSchema, RegisterFields } from "./register.schema";
+import { registerSchema, RegisterFields, StepOneFields, StepTwoFields } from "./register.schema";
 import useAuth from "@/hooks/useAuth";
 import { redirectPerRole } from "@/context/AuthContext";
 import { registerCompanyService } from "@/services/auth.service";
+import HeaderAuth from "@/components/header-auth";
+import StepOne from "./components/step-one";
+import StepTwo from "./components/step-two";
+import StepThree from "./components/step-three";
 
 const CompanyRegisterPage = () => {
     const { role, isLoading } = useAuth();
     const router = useRouter();
-    const [isSuccess, setIsSuccess] = useState<boolean>(false);
     const [successMessage, setSuccessMessage] = useState<string>("");
+    const [step, setStep] = useState<number>(1);
+    const [formData, setFormData] = useState<Partial<StepOneFields>>({});
+    const [error, setError] = useState<string | null>(null);
+
+    const handleStepOneSubmit = (stepOneData: StepOneFields) => {
+        setFormData(prev => ({ ...prev, ...stepOneData }));
+        setStep(2);
+    };
+
+    const handleStepTwoSubmit = async (stepTwoData: StepTwoFields) => {
+        setError(null);
+        const { repeatPassword: _repeatPassword, ...restFormData } = formData;
+        const finalValues = {
+            ...restFormData,
+            ...stepTwoData
+        } as RegisterFields;
+
+        try {
+            // Validamos contra el esquema completo antes de enviar
+            await registerSchema.validate(finalValues);
+
+            console.log("Registrando empresa...");
+            const response = await registerCompanyService(finalValues);
+            
+            if (response.success) {
+                setSuccessMessage(response.message || "Registro completado con éxito.");
+                setStep(3); // Mostramos el StepThree de éxito
+            } else {
+                setError(response.message || "Error al registrar la empresa.");
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("Error inesperado.");
+            }
+        }
+    };
 
     useEffect(() => {
         if (!isLoading && role) {
             router.push(redirectPerRole(role));
         }
     }, [role, isLoading, router]);
-
-    const formik = useFormik<RegisterFields>({
-        initialValues: {
-            companyName: "",
-            ruc: "",
-            email: "",
-            password: "",
-        },
-        validationSchema: registerSchema,
-        onSubmit: async (values, { setStatus }) => {
-            console.log("Registrando empresa...");
-            setStatus(null);
-            try {
-                const response = await registerCompanyService(values);
-                if (response.success) {
-                    setIsSuccess(true);
-                    setSuccessMessage(response.message || "Registro completado con éxito.");
-                } else {
-                    setStatus({ error: response.message || "Error al registrar la empresa." });
-                }
-            } catch (error) {
-                if (error instanceof Error) {
-                    setStatus({ error: error.message });
-                } else {
-                    setStatus({ error: "Error inesperado." });
-                }
-            }
-        },
-    });
 
     if (isLoading) {
         return <div>Cargando...</div>;
@@ -57,89 +68,26 @@ const CompanyRegisterPage = () => {
         return null;
     }
 
-    if (isSuccess) {
-        return (
-            <div>
-                <h1>Registro Exitoso</h1>
-                <p>{successMessage}</p>
-                <a href="/auth/login">Iniciar sesión</a>
-            </div>
-        );
-    }
-
     return (
-        <div>
-            <h1>Registrar Empresa</h1>
-            <form onSubmit={formik.handleSubmit}>
-                {formik.status && formik.status.error ? (
-                    <div>{formik.status.error}</div>
-                ) : null}
-
-                <div>
-                    <label htmlFor="companyName">Nombre de la empresa:</label>
-                    <input
-                        type="text"
-                        id="companyName"
-                        name="companyName"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.companyName}
-                    />
-                    {formik.touched.companyName && formik.errors.companyName ? (
-                        <div>{formik.errors.companyName}</div>
-                    ) : null}
-                </div>
-
-                <div>
-                    <label htmlFor="ruc">RUC:</label>
-                    <input
-                        type="text"
-                        id="ruc"
-                        name="ruc"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.ruc}
-                    />
-                    {formik.touched.ruc && formik.errors.ruc ? (
-                        <div>{formik.errors.ruc}</div>
-                    ) : null}
-                </div>
-
-                <div>
-                    <label htmlFor="email">Correo electrónico:</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.email}
-                    />
-                    {formik.touched.email && formik.errors.email ? (
-                        <div>{formik.errors.email}</div>
-                    ) : null}
-                </div>
-
-                <div>
-                    <label htmlFor="password">Contraseña:</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.password}
-                    />
-                    {formik.touched.password && formik.errors.password ? (
-                        <div>{formik.errors.password}</div>
-                    ) : null}
-                </div>
-
-                <button type="submit" disabled={formik.isSubmitting}>
-                    Registrarse
-                </button>
-            </form>
-        </div>
+        <>
+            <HeaderAuth />
+            <main className="bg-background-2 pt-6">
+                {error && (
+                    <div className="mx-4 mb-4 p-4 text-error bg-error/5 border border-error rounded-xl text-center text-sm">
+                        {error}
+                    </div>
+                )}
+                {
+                    step === 1 && <StepOne onNext={handleStepOneSubmit} />
+                }
+                {
+                    step === 2 && <StepTwo onNext={handleStepTwoSubmit} />
+                }
+                {
+                    step === 3 && <StepThree successMessage={successMessage} />
+                }
+            </main>
+        </>
     );
 };
 

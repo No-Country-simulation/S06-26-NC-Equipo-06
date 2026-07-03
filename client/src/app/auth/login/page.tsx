@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
-import { loginSchema, LoginFields } from "./login.schema";
 import useAuth from "@/hooks/useAuth";
 import { redirectPerRole } from "@/context/AuthContext";
+import LoginForm from "./components/LoginForm";
+import Footer from "@/components/footer";
+import Link from "next/link";
+import HeaderAuth from "@/components/header-auth";
 
 const Login = () => {
-    const { login, role, isLoading } = useAuth();
+    const { role, isLoading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -16,27 +18,6 @@ const Login = () => {
             router.push(redirectPerRole(role));
         }
     }, [role, isLoading, router]);
-
-    const formik = useFormik<LoginFields>({
-        initialValues: {
-            email: "",
-            password: "",
-        },
-        validationSchema: loginSchema,
-        onSubmit: async (values, { setStatus }) => {
-            console.log("Logueando...");
-            setStatus(null); // Limpiar errores previos de envío
-            try {
-                await login(values);
-            } catch (error) {
-                if (error instanceof Error) {
-                    setStatus({ error: error.message });
-                } else {
-                    setStatus({ error: "Error inesperado." });
-                }
-            }
-        },
-    });
 
     if (isLoading) {
         return <div>Cargando...</div>;
@@ -47,47 +28,19 @@ const Login = () => {
     }
 
     return (
-        <div>
-            <h1>Iniciar Sesión</h1>
-            <form onSubmit={formik.handleSubmit}>
-                <div>
-                    <label htmlFor="email">Correo electrónico:</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.email}
-                    />
-                    {formik.touched.email && formik.errors.email ? (
-                        <div>{formik.errors.email}</div>
-                    ) : null}
+        <>
+            <HeaderAuth />
+            <main className="bg-background-2 py-16">
+                <LoginForm />
+                <div className="flex gap-1 justify-center">
+                    <p className="text-center text-text-2">
+                        ¿No tienes una cuenta?
+                    </p>
+                    <Link href="/auth/company/register" className="text-primary">Registrarse</Link>
                 </div>
-                <div>
-                    <label htmlFor="password">Contraseña:</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        value={formik.values.password}
-                    />
-                    {formik.touched.password && formik.errors.password ? (
-                        <div>{formik.errors.password}</div>
-                    ) : null}
-                </div>
-                <button type="submit" disabled={formik.isSubmitting}>
-                    Entrar
-                </button>
-            </form>
-            {formik.status && formik.status.error ? (
-                <div>{formik.status.error}</div>
-            ) : null}
-        </div>
+            </main>
+        </>
     );
 };
 
 export default Login;
-
