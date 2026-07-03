@@ -42,8 +42,10 @@ const StepTwo = () => {
                 </div>
             </div>
             <div className="mb-5">
-                <span className="text-text-1 text-center block">¿Necesitas ayuda con tu RUC?</span>
-                <a href="#" className="text-primary font-semibold text-center block">Contactar soporte</a>
+                <span className="text-text-1 text-center block mb-2">¿Necesitas ayuda con tu RUC?</span>
+                <a href="#" className="text-primary font-semibold flex items-center gap-2 justify-center text-center">
+                    Contactar soporte <img src="/Icon/link.svg" alt="Icono de enlace" className="h-3 w-auto" />
+                </a>
             </div>
             <button type="submit" className="btn btn-primary w-full">Continuar</button>
         </form>
