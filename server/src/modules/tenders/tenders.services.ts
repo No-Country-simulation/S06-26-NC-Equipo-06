@@ -123,3 +123,92 @@ export const createTenderService = async (data: any, userId: string, files: Expr
     }
 
 }
+
+export const updateTenderService = async (data: any, userId: string, idTender: string) => {
+    const tender = await prisma.tenders.findUnique({
+        where: {
+            id: idTender,
+            OR: [
+                { status: 'DRAFT' },
+                { status: 'REJECTED' }
+            ]
+        }
+    })
+
+    if (!tender) {
+        throw new AppError(404, "Licitación no encontrada", 'TENDER_NOT_FOUND');
+    }
+
+    if (tender.idCreator !== userId) {
+        throw new AppError(403, "Usuario no autorizado", 'USER_NOT_AUTHORIZED');
+    }
+
+    await prisma.tenders.update({
+        where: {
+            id: idTender
+        },
+        data: {
+            title: data.title ?? tender.title,
+            ubication: data.ubication ?? tender.ubication,
+            coorX: data.coorX ?? tender.coorX,
+            coorY: data.coorY ?? tender.coorY,
+            description: data.description ?? tender.description,
+            executionPeriod: data.executionPeriod ?? tender.executionPeriod,
+            contact: data.contact ?? tender.contact,
+            municipality: data.municipality ?? tender.municipality
+        }
+    })
+
+    if (data.tenderSchedule) {
+        for (const schedule of data.tenderSchedule) {
+            if (schedule.idSchedule) {
+                const scheduleExists = await prisma.tenderSchedule.findUnique({
+                    where: {
+                        id: schedule.idSchedule
+                    }
+                })
+                if (!scheduleExists) {
+                    throw new AppError(404, "Cronograma no encontrado", 'SCHEDULE_NOT_FOUND');
+                }
+                await prisma.tenderSchedule.update({
+                    where: {
+                        id: schedule.idSchedule
+                    },
+                    data: {
+                        schedule: schedule.schedule ?? scheduleExists.schedule,
+                        scheduleTimeLine: schedule.scheduleTimeLine ?? scheduleExists.scheduleTimeLine
+                    }
+                })
+            }
+        }
+    }
+
+    if (data.requirements) {
+        for (const requirement of data.requirements) {
+            if (requirement.idRequirement) {
+                const requirementExists = await prisma.requirements.findUnique({
+                    where: {
+                        id: requirement.idRequirement
+                    }
+                })
+                if (!requirementExists) {
+                    throw new AppError(404, "Requisito no encontrado", 'REQUIREMENT_NOT_FOUND');
+                }
+                await prisma.requirements.update({
+                    where: {
+                        id: requirement.idRequirement
+                    },
+                    data: {
+                        requirement: requirement.requirement ?? requirementExists.requirement,
+                        validationSchema: JSON.stringify(requirement.validationSchema) ?? JSON.stringify(requirementExists.validationSchema)
+                    }
+                })
+            }
+        }
+    }
+
+    return {
+        message: "Licitación actualizada exitosamente",
+        code: "TENDER_UPDATED"
+    }
+}

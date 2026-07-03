@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import * as tenderServices from './tenders.services';
 import {
-    createTenderSchema
+    createTenderSchema,
+    updateTenderSchema,
+    idSchema
 } from './tenders.schema';
 import { AppError } from '../../utils/app.error';
 
@@ -14,7 +16,7 @@ export const createTenderController = async (req: Request, res: Response, next: 
 
         const files = (req.files as { [fieldname: string]: Express.Multer.File[] })?.documents ?? [];
 
-        if(!files || files.length === 0) {
+        if (!files || files.length === 0) {
             throw new AppError(400, "No se han subido archivos", 'NO_FILES_UPLOADED');
         }
 
@@ -31,3 +33,24 @@ export const createTenderController = async (req: Request, res: Response, next: 
     }
 }
 
+export const updateTenderController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const user = (req as any).user;
+
+        const data = updateTenderSchema.parse(req.body);
+
+        const { idTender } = idSchema.parse(req.params);
+
+        const response = await tenderServices.updateTenderService(data, user.userId, idTender);
+
+        res.status(201).json({
+            success: true,
+            message: response.message,
+            code: response.code
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}

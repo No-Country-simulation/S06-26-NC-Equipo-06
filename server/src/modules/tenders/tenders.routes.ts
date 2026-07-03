@@ -6,6 +6,8 @@ import upload from '../../config/multer';
 
 const router = express.Router();
 
-router.use('/create-tender', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.fields([{ name: 'documents', maxCount: 10 }]), tendersController.createTenderController);
+router.post('/create-tender', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.fields([{ name: 'documents', maxCount: 10 }]), tendersController.createTenderController);
+
+router.put('/update-tender/:idTender', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), upload.fields([{ name: 'documents', maxCount: 10 }]), tendersController.updateTenderController);
 
 export default router;
