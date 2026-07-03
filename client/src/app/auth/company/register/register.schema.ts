@@ -34,5 +34,22 @@ export const stepOneSchema = Yup.object().shape({
         .required("La confirmación de la contraseña es requerida"),
 });
 
+export const stepTwoSchema = Yup.object().shape({
+    ruc: Yup.string()
+        .matches(/^\d{11}$/, "El RUC debe tener exactamente 11 dígitos numéricos")
+        .required("El RUC es requerido"),
+    companyName: Yup.string()
+        .min(3, "El nombre de la empresa debe tener al menos 3 caracteres")
+        .required("El nombre de la empresa es requerido"),
+    taxStatus: Yup.string()
+        .oneOf(["HABIDO", "NO_HABIDO", "NO_HALLADO"], "El estado de contribuyente no es válido")
+        .required("El estado de contribuyente es requerido"),
+    fiscalAddress: Yup.string()
+        .required("La dirección fiscal es requerida"),
+    fiscalStatus: Yup.boolean()
+        .required("El estado fiscal es requerido"),
+});
+
 export type StepOneFields = Yup.InferType<typeof stepOneSchema>;
+export type StepTwoFields = Yup.InferType<typeof stepTwoSchema>;
 export type RegisterFields = Yup.InferType<typeof registerSchema>;

@@ -1,6 +1,66 @@
-const StepTwo = () => {
+import { useState } from "react";
+import { useFormik } from "formik";
+import { StepTwoFields, stepTwoSchema } from "../register.schema";
+import { verifyRucService } from "@/services/auth.service";
+
+interface StepTwoProps {
+    onNext: (data: StepTwoFields) => void;
+}
+
+const StepTwo = ({ onNext }: StepTwoProps) => {
+    const [isVerifying, setIsVerifying] = useState(false);
+
+    const formik = useFormik<StepTwoFields>({
+        initialValues: {
+            ruc: "",
+            companyName: "",
+            taxStatus: "HABIDO",
+            fiscalAddress: "",
+            fiscalStatus: true,
+        },
+        validationSchema: stepTwoSchema,
+        onSubmit: (values) => {
+            onNext(values);
+        },
+    });
+
+    const handleRucChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Sanitizar el input para que solo contenga números y un máximo de 11 dígitos
+        const val = e.target.value.replace(/\D/g, "").slice(0, 11);
+        formik.setFieldValue("ruc", val);
+
+        if (val.length === 11) {
+            setIsVerifying(true);
+            try {
+                const data = await verifyRucService(val);
+                formik.setFieldValue("companyName", data.companyName);
+                formik.setFieldValue("fiscalAddress", data.fiscalAddress);
+                formik.setFieldValue("taxStatus", data.taxStatus);
+                formik.setFieldValue("fiscalStatus", data.fiscalStatus);
+            } catch (error) {
+                console.error("Error al verificar el RUC:", error);
+                const msg = error instanceof Error ? error.message : "No se pudo verificar el RUC.";
+                formik.setFieldError("ruc", msg);
+                formik.setFieldValue("companyName", "");
+                formik.setFieldValue("fiscalAddress", "");
+                formik.setFieldValue("taxStatus", "HABIDO");
+                formik.setFieldValue("fiscalStatus", true);
+            } finally {
+                setIsVerifying(false);
+            }
+        } else {
+            // Solo limpiar si actualmente tienen algún valor para evitar re-renders innecesarios
+            if (formik.values.companyName !== "") {
+                formik.setFieldValue("companyName", "");
+                formik.setFieldValue("fiscalAddress", "");
+                formik.setFieldValue("taxStatus", "HABIDO");
+                formik.setFieldValue("fiscalStatus", true);
+            }
+        }
+    };
+
     return (
-        <form className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10">
+        <form onSubmit={formik.handleSubmit} className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10">
             <h1>Información Legal</h1>
             <p>
                 Los datos se van a autocompletar de
@@ -8,25 +68,65 @@ const StepTwo = () => {
             </p>
             <div className="flex flex-col gap-2 mb-5">
                 <label htmlFor="ruc">RUC</label>
-                <input type="text" id="ruc" />
+                <input
+                    type="text"
+                    id="ruc"
+                    name="ruc"
+                    onChange={handleRucChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.ruc}
+                    disabled={isVerifying}
+                />
+                {isVerifying && (
+                    <p className="text-info text-[13px] mt-1">Consultando SUNAT...</p>
+                )}
+                {formik.touched.ruc && formik.errors.ruc ? (
+                    <p className="text-error text-sm mt-1">{formik.errors.ruc}</p>
+                ) : null}
             </div>
             <hr className="border-grey-5 mb-3" />
             <div className="flex flex-col gap-2 mb-3">
                 <label htmlFor="companyName">Razón Social</label>
-                <input type="text" id="companyName" readOnly />
+                <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    readOnly
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.companyName}
+                />
+                {formik.touched.companyName && formik.errors.companyName ? (
+                    <p className="text-error text-sm mt-1">{formik.errors.companyName}</p>
+                ) : null}
             </div>
             <div className="flex flex-col gap-2 mb-3">
                 <label htmlFor="fiscalAddress">Dirección Fiscal</label>
-                <input type="text" id="fiscalAddress" readOnly />
+                <input
+                    type="text"
+                    id="fiscalAddress"
+                    name="fiscalAddress"
+                    readOnly
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.fiscalAddress}
+                />
+                {formik.touched.fiscalAddress && formik.errors.fiscalAddress ? (
+                    <p className="text-error text-sm mt-1">{formik.errors.fiscalAddress}</p>
+                ) : null}
             </div>
             <div className="grid grid-cols-2 mb-3">
                 <div className="flex flex-col gap-2">
                     <span className="font-medium text-2">Estado</span>
-                    <span className="text-[11px] font-bold w-fit text-success bg-success/5 px-2 py-1 border-[0.5px] border-success rounded-full">ACTIVO</span>
+                    <span className="text-[11px] font-bold w-fit text-success bg-success/5 px-2 py-1 border-[0.5px] border-success rounded-full">
+                        {formik.values.fiscalStatus ? "ACTIVO" : "INACTIVO"}
+                    </span>
                 </div>
                 <div className="flex flex-col gap-2 mr-6">
                     <span className="font-medium text-2">Condición</span>
-                    <span className="text-[11px] font-bold w-fit text-info bg-info/5 px-2 py-1 border-[0.5px] border-info rounded-full">HABIDO</span>
+                    <span className="text-[11px] font-bold w-fit text-info bg-info/5 px-2 py-1 border-[0.5px] border-info rounded-full">
+                        {formik.values.taxStatus}
+                    </span>
                 </div>
             </div>
             {/* information box */}
