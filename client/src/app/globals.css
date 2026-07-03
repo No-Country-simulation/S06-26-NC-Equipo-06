@@ -5,6 +5,14 @@
   --foreground: #171717;
 }
 
+h1 {
+  @apply text-[28px] text-text-2 font-semibold;
+}
+
+p {
+  @apply text-text-1;
+}
+
 @layer base {
   button {
     cursor: pointer;
@@ -22,6 +30,14 @@
   input[type="password"]::-ms-reveal,
   input[type="password"]::-ms-clear {
     display: none;
+  }
+
+  .btn {
+    @apply py-4 px-6 rounded-xl font-semibold;
+  }
+
+  .btn-primary {
+    @apply text-white bg-primary;
   }
 }
 
@@ -43,6 +59,7 @@
   --color-error: #DC2626;
   --color-success: #15803D;
   --color-warning: #DB7628;
+  --color-info: #1e40af;
 }
 
 @theme inline {
