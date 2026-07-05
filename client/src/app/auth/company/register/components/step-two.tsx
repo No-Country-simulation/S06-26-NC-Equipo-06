@@ -60,7 +60,7 @@ const StepTwo = ({ onNext }: StepTwoProps) => {
     };
 
     return (
-        <form onSubmit={formik.handleSubmit} className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10">
+        <form onSubmit={formik.handleSubmit} className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10 max-w-143 md:mx-auto">
             <h1>Información Legal</h1>
             <p>
                 Los datos se van a autocompletar de
@@ -76,6 +76,7 @@ const StepTwo = ({ onNext }: StepTwoProps) => {
                     onBlur={formik.handleBlur}
                     value={formik.values.ruc}
                     disabled={isVerifying}
+                    className="custom-input"
                 />
                 {isVerifying && (
                     <p className="text-info text-[13px] mt-1">Consultando SUNAT...</p>
@@ -95,6 +96,7 @@ const StepTwo = ({ onNext }: StepTwoProps) => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     value={formik.values.companyName}
+                    className="custom-input bg-background-2 text-label-text"
                 />
                 {formik.touched.companyName && formik.errors.companyName ? (
                     <p className="text-error text-sm mt-1">{formik.errors.companyName}</p>
@@ -110,6 +112,7 @@ const StepTwo = ({ onNext }: StepTwoProps) => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     value={formik.values.fiscalAddress}
+                    className="custom-input bg-background-2 text-label-text"
                 />
                 {formik.touched.fiscalAddress && formik.errors.fiscalAddress ? (
                     <p className="text-error text-sm mt-1">{formik.errors.fiscalAddress}</p>

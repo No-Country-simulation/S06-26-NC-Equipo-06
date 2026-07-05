@@ -1,30 +1,23 @@
 import Link from "next/link";
 
 interface StepThreeProps {
-    successMessage?: string;
+    email?: string;
 }
 
-const StepThree = ({ successMessage }: StepThreeProps) => {
+const StepThree = ({ email }: StepThreeProps) => {
     return (
-        <div className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10 text-center flex flex-col items-center">
-            <div className="size-16 flex justify-center items-center bg-background-2 rounded-full mb-4">
-                <svg
-                    className="size-8 text-success"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-            </div>
-            <h1 className="text-[28px] font-semibold text-text-2 mb-2">Registro Exitoso</h1>
-            <p className="text-text-1 mb-8">
-                {successMessage || "Tu empresa ha sido registrada correctamente."}
+        <div className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10 max-w-143 md:mx-auto">
+            <h1 className="mb-1">Verifica tu cuenta</h1>
+            <p className="mb-12">
+                Hemos enviado un mail de verificación a su correo electrónico institucional {email}.
             </p>
-            <Link href="/auth/login" className="btn btn-primary w-full block text-center">
-                Iniciar sesión
+            <p className="mb-10 text-center">
+                ¿No recibiste el mail? <Link href="/auth/company/resend-verification-email" className="text-primary font-semibold">
+                    Reenviar mail
+                </Link>
+            </p>
+            <Link href="/auth/company/verify-email" className="btn btn-primary w-full block text-center">
+                Verificar Correo
             </Link>
         </div>
     );

@@ -20,7 +20,7 @@ const StepOne = ({ onNext }: StepOneProps) => {
     });
 
     return (
-        <form onSubmit={formik.handleSubmit} className="p-8 mx-4 rounded-3xl bg-background">
+        <form onSubmit={formik.handleSubmit} className="p-8 mx-4 rounded-3xl bg-background max-w-143 md:mx-auto mb-10">
             <h1 className="text-2 text-[28px] font-semibold">Crear tu cuenta</h1>
             <p className="text-text-1 mb-8">Comienza tu proceso de postulación ingresando tus credenciales de acceso.</p>
             <div className="mb-5">
@@ -29,7 +29,7 @@ const StepOne = ({ onNext }: StepOneProps) => {
                     type="email"
                     id="email"
                     name="email"
-                    className="w-full"
+                    className="custom-input"
                     placeholder="ejemplo@licitaciones.gob.pe"
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}

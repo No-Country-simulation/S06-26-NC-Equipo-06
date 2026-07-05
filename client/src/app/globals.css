@@ -5,15 +5,13 @@
   --foreground: #171717;
 }
 
-h1 {
-  @apply text-[28px] text-text-2 font-semibold;
-}
-
-p {
-  @apply text-text-1;
-}
-
 @layer base {
+  h1 {
+    @apply text-[28px] text-text-2 font-semibold;
+  }
+  p {
+    @apply text-text-1;
+  }
   button {
     cursor: pointer;
   }
@@ -22,8 +20,8 @@ p {
     font-family: var(--font-sans);
   }
 
-  input {
-    @apply w-full py-4.5 px-4 rounded-xl border-2 border-grey-2 bg-background;
+  .custom-input {
+    @apply w-full py-3 px-4 rounded-xl border-2 border-grey-2 bg-background;
   }
 
   /* Ocultar el botón de revelar contraseña por defecto de los navegadores */
