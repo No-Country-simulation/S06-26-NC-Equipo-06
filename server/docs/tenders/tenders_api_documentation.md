@@ -39,7 +39,7 @@ Crea una nueva licitación en estado borrador (`DRAFT`) o activa/pendiente (`PEN
   * Enviado en el **cuerpo (`Body`) como `multipart/form-data`**:
     * `action`: `"SEND"` o `"DRAFT"`.
     * `title`: Título de la licitación.
-    * `ubication`: Ubicación geográfica o dirección.
+    * `location`: Ubicación geográfica o dirección.
     * `coorX`: Coordenada X (numérica, longitud).
     * `coorY`: Coordenada Y (numérica, latitud).
     * `description`: Descripción de la licitación.

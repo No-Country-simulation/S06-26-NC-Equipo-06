@@ -233,7 +233,7 @@ model Tenders {
   idCreator       String   @db.Uuid
   status          StatusTender
   title           String
-  ubication       String
+  location        String
   coorX           Float
   coorY           Float
   description     String

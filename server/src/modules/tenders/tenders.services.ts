@@ -68,7 +68,7 @@ export const createTenderService = async (data: any, userId: string, files: Expr
                 idCreator: findProfileUser.id,
                 status: data.action === 'DRAFT' ? 'DRAFT' : 'PENDING',
                 title: data.title,
-                ubication: data.ubication,
+                location: data.location,
                 coorX: data.coorX,
                 coorY: data.coorY,
                 description: data.description,
@@ -150,7 +150,7 @@ export const updateTenderService = async (data: any, userId: string, idTender: s
         },
         data: {
             title: data.title ?? tender.title,
-            ubication: data.ubication ?? tender.ubication,
+            location: data.location ?? tender.location,
             coorX: data.coorX ?? tender.coorX,
             coorY: data.coorY ?? tender.coorY,
             description: data.description ?? tender.description,

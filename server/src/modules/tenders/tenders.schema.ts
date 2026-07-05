@@ -3,7 +3,7 @@ import z from 'zod';
 export const createTenderSchema = z.object({
     action: z.enum(['SEND', 'DRAFT']),
     title: z.string().min(1, "El nombre de la licitación debe tener al menos 1 caracter."),
-    ubication: z.string().min(1, "La ubicación de la licitación debe tener al menos 1 caracter."),
+    location: z.string().min(1, "La ubicación de la licitación debe tener al menos 1 caracter."),
     coorX: z.number(),
     coorY: z.number(),
     description: z.string().min(1, "La descripción de la licitación debe tener al menos 1 caracter."),
