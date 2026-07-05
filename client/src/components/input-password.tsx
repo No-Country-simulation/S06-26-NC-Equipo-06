@@ -26,9 +26,8 @@ const InputPassword: React.FC<InputPasswordProps> = ({
                 </label>
             )}
             <div
-                className={`flex items-center gap-3 w-full rounded-xl py-4.5 px-4 border bg-background transition-colors ${
-                    touched && error ? "border-error" : "border-grey-2"
-                }`}
+                className={`flex items-center gap-3 w-full rounded-xl py-3 px-4 border bg-background transition-colors ${touched && error ? "border-error" : "border-grey-2"
+                    }`}
             >
                 {icon && (
                     <img src={icon} alt="Input icon" className="h-6 w-auto shrink-0" />

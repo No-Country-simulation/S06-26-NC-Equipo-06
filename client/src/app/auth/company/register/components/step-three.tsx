@@ -6,7 +6,7 @@ interface StepThreeProps {
 
 const StepThree = ({ email }: StepThreeProps) => {
     return (
-        <div className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10">
+        <div className="bg-background border border-background-2 rounded-3xl mx-4 p-8 mb-10 max-w-143 md:mx-auto">
             <h1 className="mb-1">Verifica tu cuenta</h1>
             <p className="mb-12">
                 Hemos enviado un mail de verificación a su correo electrónico institucional {email}.
