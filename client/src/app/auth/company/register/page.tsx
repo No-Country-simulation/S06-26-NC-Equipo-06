@@ -10,6 +10,7 @@ import HeaderAuth from "@/components/header-auth";
 import StepOne from "./components/step-one";
 import StepTwo from "./components/step-two";
 import StepThree from "./components/step-three";
+import StepIndicator from "./components/step-indicator";
 
 const CompanyRegisterPage = () => {
     const { role, isLoading } = useAuth();
@@ -38,7 +39,7 @@ const CompanyRegisterPage = () => {
 
             console.log("Registrando empresa...");
             const response = await registerCompanyService(finalValues);
-            
+
             if (response.success) {
                 setSuccessMessage(response.message || "Registro completado con éxito.");
                 setStep(3); // Mostramos el StepThree de éxito
@@ -72,6 +73,7 @@ const CompanyRegisterPage = () => {
         <>
             <HeaderAuth />
             <main className="bg-background-2 pt-6">
+                <StepIndicator currentStep={step} />
                 {error && (
                     <div className="mx-4 mb-4 p-4 text-error bg-error/5 border border-error rounded-xl text-center text-sm">
                         {error}
@@ -84,7 +86,7 @@ const CompanyRegisterPage = () => {
                     step === 2 && <StepTwo onNext={handleStepTwoSubmit} />
                 }
                 {
-                    step === 3 && <StepThree successMessage={successMessage} />
+                    step === 3 && <StepThree email={formData.email} />
                 }
             </main>
         </>

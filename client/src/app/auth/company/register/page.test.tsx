@@ -152,9 +152,9 @@ describe("CompanyRegisterPage", () => {
         });
 
         await waitFor(() => {
-            expect(screen.getByRole("heading", { name: /registro exitoso/i })).toBeInTheDocument();
-            expect(screen.getByText(/empresa registrada exitosamente/i)).toBeInTheDocument();
-            expect(screen.getByRole("link", { name: /iniciar sesión/i })).toBeInTheDocument();
+            expect(screen.getByRole("heading", { name: /verifica tu cuenta/i })).toBeInTheDocument();
+            expect(screen.getByText(/hemos enviado un mail de verificación/i)).toBeInTheDocument();
+            expect(screen.getByRole("link", { name: /verificar correo/i })).toBeInTheDocument();
         });
     });
 
