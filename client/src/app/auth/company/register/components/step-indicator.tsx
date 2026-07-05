@@ -21,11 +21,10 @@ const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
                         <div className="flex flex-col items-center relative">
                             {/* Circle */}
                             <div
-                                className={`size-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 ${
-                                    isActive || isCompleted
-                                        ? "bg-[#006872] text-white"
+                                className={`size-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 ${isActive || isCompleted
+                                        ? "bg-primary text-white"
                                         : "bg-white border-2 border-grey-3 text-grey-4"
-                                }`}
+                                    }`}
                             >
                                 {isCompleted ? (
                                     <svg
@@ -45,9 +44,8 @@ const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
 
                             {/* Label */}
                             <span
-                                className={`absolute top-12 text-[12px] font-bold whitespace-nowrap transition-colors duration-300 ${
-                                    isActive || isCompleted ? "text-[#006872]" : "text-grey-4"
-                                }`}
+                                className={`absolute top-12 text-[12px] font-bold whitespace-nowrap transition-colors duration-300 ${isActive || isCompleted ? "text-primary" : "text-grey-4"
+                                    }`}
                             >
                                 {step.label}
                             </span>
@@ -55,9 +53,9 @@ const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
 
                         {/* Line */}
                         {idx < steps.length - 1 && (
-                            <div className="flex-1 h-[2px] bg-grey-3 mx-4">
+                            <div className="flex-1 h-0.5 bg-grey-3 mx-4">
                                 <div
-                                    className="h-full bg-[#006872] transition-all duration-300"
+                                    className="h-full bg-primary transition-all duration-300"
                                     style={{ width: isCompleted ? "100%" : "0%" }}
                                 />
                             </div>
