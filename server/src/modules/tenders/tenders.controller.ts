@@ -120,3 +120,44 @@ export const deleteTenderController = async (req: Request, res: Response, next: 
         next(error);
     }
 }
+
+export const getAllTendersController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const user = (req as any).user;
+
+        const { page, limit, title, location, municipality, executionPeriod } = req.query;
+
+        const pageNumber = parseInt(page as string, 10);
+        const limitNumber = parseInt(limit as string, 10);
+
+        const response = await tenderServices.getAllTendersService(pageNumber, limitNumber, title as string, location as string, municipality as string, executionPeriod as string, user.role, user.userId);
+        res.status(201).json({
+            success: true,
+            message: response.message,
+            code: response.code,
+            data: response.data
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getTenderController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const user = (req as any).user;
+
+        const { id } = idSchema.parse(req.params);
+
+        const response = await tenderServices.getTenderService(id, user.role, user.userId);
+        res.status(201).json({
+            success: true,
+            message: response.message,
+            code: response.code,
+            data: response.data
+        });
+    } catch (error) {
+        next(error);
+    }
+}
