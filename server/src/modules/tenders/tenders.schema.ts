@@ -32,7 +32,7 @@ export const createTenderSchema = z.object({
 
 export const updateTenderSchema = z.object({
     title: z.string().min(1, "El nombre de la licitación debe tener al menos 1 caracter.").optional(),
-    ubication: z.string().min(1, "La ubicación de la licitación debe tener al menos 1 caracter.").optional(),
+    location: z.string().min(1, "La ubicación de la licitación debe tener al menos 1 caracter.").optional(),
     coorX: z.number().optional(),
     coorY: z.number().optional(),
     description: z.string().min(1, "La descripción de la licitación debe tener al menos 1 caracter.").optional(),
