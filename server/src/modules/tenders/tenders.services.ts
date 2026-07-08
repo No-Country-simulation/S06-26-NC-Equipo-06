@@ -2,7 +2,7 @@ import { prisma } from "../../config/prisma";
 import { AppError } from '../../utils/app.error';
 import { moveFilesToTenderFolder, deleteTenderFile } from "../../utils/multer.helper";
 import { fromFile } from "file-type";
-import { DocumentTypes } from "@prisma/client";
+import { DocumentTypes, Role, StatusTender } from "@prisma/client";
 
 export const createTenderService = async (data: any, userId: string, files: Express.Multer.File[] = []) => {
 
@@ -391,5 +391,81 @@ export const deleteTenderService = async (userId: string, idTender: string) => {
     return {
         message: "Licitación archivada exitosamente",
         code: "TENDER_ARCHIVED"
+    }
+}
+
+export const getAllTendersService = async (page: number, limit: number, title?: string, location?: string, municipality?: string, executionPeriod?: string, role?: Role, userId?: string) => {
+
+    const where = {
+        idCreator: role === 'MUNICIPAL_EVALUATOR' ? userId : undefined,
+        title: title ? {
+            contains: title,
+            mode: "insensitive" as const,
+        } : undefined,
+        location: location ? {
+            contains: location,
+            mode: "insensitive" as const,
+        } : undefined,
+        municipality: municipality ? {
+            contains: municipality,
+            mode: "insensitive" as const,
+        } : undefined,
+        executionPeriod: executionPeriod ? {
+            contains: executionPeriod,
+            mode: "insensitive" as const,
+        } : undefined,
+        status: role === "COMPANY" ? StatusTender.APPROVED : {
+            in: [
+                StatusTender.DRAFT,
+                StatusTender.PENDING,
+                StatusTender.APPROVED,
+                StatusTender.REJECTED,
+                StatusTender.CLOSED
+            ]
+        }
+    };
+
+    const [totalTenders, findTenders] = await prisma.$transaction([
+        prisma.tenders.count({ where }),
+        prisma.tenders.findMany({
+            where,
+            skip: (page - 1) * limit,
+            take: limit,
+        }),
+    ]);
+
+    return {
+        message: "Licitaciones encontradas exitosamente",
+        code: "TENDERS_FOUND",
+        data: { findTenders, totalTenders }
+    }
+}
+
+export const getTenderService = async (idTender: string, role: Role, userId?: string) => {
+
+    const findTender = await prisma.tenders.findUnique({
+        where: {
+            id: idTender,
+            idCreator: role === 'MUNICIPAL_EVALUATOR' ? userId : undefined,
+            status: role === 'COMPANY' ? StatusTender.APPROVED : {
+                in: [
+                    StatusTender.DRAFT,
+                    StatusTender.PENDING,
+                    StatusTender.APPROVED,
+                    StatusTender.REJECTED,
+                    StatusTender.CLOSED
+                ]
+            }
+        }
+    })
+
+    if (!findTender) {
+        throw new AppError(404, "Licitación no encontrada", 'TENDER_NOT_FOUND');
+    }
+
+    return {
+        message: "Licitación encontrada exitosamente",
+        code: "TENDER_FOUND",
+        data: findTender
     }
 }
