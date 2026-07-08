@@ -16,4 +16,8 @@ router.post('/add-file-tender/:id', refreshToken, tokenMiddleware, authorize(['M
 
 router.patch('/delete-tender/:id', refreshToken, tokenMiddleware, authorize(['MUNICIPAL_EVALUATOR']), tendersController.deleteTenderController);
 
+router.get('/get-all-tenders', refreshToken, tokenMiddleware, authorize(['COMPANY', 'MUNICIPAL_EVALUATOR', 'MUNICIPAL_ADMIN']), tendersController.getAllTendersController);
+
+router.get('/get-tender/:id', refreshToken, tokenMiddleware, authorize(['COMPANY', 'MUNICIPAL_EVALUATOR', 'MUNICIPAL_ADMIN']), tendersController.getTenderController);
+
 export default router;
